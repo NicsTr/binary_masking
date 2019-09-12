@@ -1,0 +1,3 @@
+[submodule "private_multiplication"]
+	path = private_multiplication
+	url = git@github.com:NicsTr/private_multiplication.git
