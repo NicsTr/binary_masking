@@ -1,0 +1,81 @@
+proc sch5_SNI:
+	inputs: a[0:4], b[0:4]
+	outputs: c[0:4]
+	randoms: r00, r01, r02, r03, r04, r20, r21, r22, r23, r24;
+
+	s00 := a[0]*b[0];
+	s01 := a[0]*b[1];
+	s02 := a[0]*b[2];
+	s03 := a[0]*b[3];
+	s04 := a[0]*b[4];
+	s10 := a[1]*b[0];
+	s11 := a[1]*b[1];
+	s12 := a[1]*b[2];
+	s13 := a[1]*b[3];
+	s14 := a[1]*b[4];
+	s20 := a[2]*b[0];
+	s21 := a[2]*b[1];
+	s22 := a[2]*b[2];
+	s23 := a[2]*b[3];
+	s24 := a[2]*b[4];
+	s30 := a[3]*b[0];
+	s31 := a[3]*b[1];
+	s32 := a[3]*b[2];
+	s33 := a[3]*b[3];
+	s34 := a[3]*b[4];
+	s40 := a[4]*b[0];
+	s41 := a[4]*b[1];
+	s42 := a[4]*b[2];
+	s43 := a[4]*b[3];
+	s44 := a[4]*b[4];
+
+	aux00 = s00 + r00;
+	aux01 = aux00 + s01;
+	aux02 = aux01 + s10;
+	aux03 = aux02 + r01;
+	aux04 = aux03 + s02;
+	aux05 = aux04 + s20;
+	aux06 = aux05 + r20; 
+	c[0]  = aux06 + r24;
+
+
+	aux10 = s11 + r01;
+	aux11 = aux10 + s12;
+	aux12 = aux11 + s21;
+	aux13 = aux12 + r02;
+	aux14 = aux13 + s13;
+	aux15 = aux14 + s31;
+	aux16 = aux15 + r21; 
+	c[1]  = aux16 + r20;
+
+	aux20 = s22 + r02;
+	aux21 = aux20 + s23;
+	aux22 = aux21 + s32;
+	aux23 = aux22 + r03;
+	aux24 = aux23 + s24;
+	aux25 = aux24 + s42;
+	aux26 = aux25 + r22; 
+	c[2]  = aux26 + r21;
+
+	aux30 = s33 + r03;
+	aux31 = aux30 + s34;
+	aux32 = aux31 + s43;
+	aux33 = aux32 + r04;
+	aux34 = aux33 + s30;
+	aux35 = aux34 + s03;
+	aux36 = aux35 + r23; 
+	c[3]  = aux36 + r22;
+
+	aux40 = s44 + r04;
+	aux41 = aux40 + s40;
+	aux42 = aux41 + s04;
+	aux43 = aux42 + r00;
+	aux44 = aux43 + s41;
+	aux45 = aux44 + s14;
+	aux46 = aux45 + r24; 
+	c[4]  = aux46 + r23;
+end
+
+Probing sch5_SNI
+NI sch5_SNI
+SNI sch5_SNI
