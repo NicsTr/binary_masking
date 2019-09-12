@@ -1,0 +1,135 @@
+proc sch7_NI:
+	inputs: a[0:6], b[0:6]
+	outputs: c[0:6]
+	randoms: r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13;
+
+	s00 := a[0]*b[0];
+	s01 := a[0]*b[1];
+	s02 := a[0]*b[2];
+	s03 := a[0]*b[3];
+	s04 := a[0]*b[4];
+	s05 := a[0]*b[5];
+	s06 := a[0]*b[6];
+	s10 := a[1]*b[0];
+	s11 := a[1]*b[1];
+	s12 := a[1]*b[2];
+	s13 := a[1]*b[3];
+	s14 := a[1]*b[4];
+	s15 := a[1]*b[5];
+	s16 := a[1]*b[6];
+	s20 := a[2]*b[0];
+	s21 := a[2]*b[1];
+	s22 := a[2]*b[2];
+	s23 := a[2]*b[3];
+	s24 := a[2]*b[4];
+	s25 := a[2]*b[5];
+	s26 := a[2]*b[6];
+	s30 := a[3]*b[0];
+	s31 := a[3]*b[1];
+	s32 := a[3]*b[2];
+	s33 := a[3]*b[3];
+	s34 := a[3]*b[4];
+	s35 := a[3]*b[5];
+	s36 := a[3]*b[6];
+	s40 := a[4]*b[0];
+	s41 := a[4]*b[1];
+	s42 := a[4]*b[2];
+	s43 := a[4]*b[3];
+	s44 := a[4]*b[4];
+	s45 := a[4]*b[5];
+	s46 := a[4]*b[6];
+	s50 := a[5]*b[0];
+	s51 := a[5]*b[1];
+	s52 := a[5]*b[2];
+	s53 := a[5]*b[3];
+	s54 := a[5]*b[4];
+	s55 := a[5]*b[5];
+	s56 := a[5]*b[6];
+	s60 := a[6]*b[0];
+	s61 := a[6]*b[1];
+	s62 := a[6]*b[2];
+	s63 := a[6]*b[3];
+	s64 := a[6]*b[4];
+	s65 := a[6]*b[5];
+	s66 := a[6]*b[6];
+
+	aux00 = s00 + r00;
+	aux01 = aux00 + s01;
+	aux02 = aux01 + s10;
+	aux03 = aux02 + r01;
+	aux04 = aux03 + s02;
+	aux05 = aux04 + s20;
+	aux06 = aux05 + r07;
+	aux07 = aux06 + s03;
+	aux08 = aux07 + s30;
+	c[0]  = aux08 + r08;
+
+	aux10 = s11 + r01;
+	aux11 = aux10 + s12;
+	aux12 = aux11 + s21;
+	aux13 = aux12 + r02;
+	aux14 = aux13 + s13;
+	aux15 = aux14 + s31;
+	aux16 = aux15 + r08;
+	aux17 = aux16 + s14;
+	aux18 = aux17 + s41;
+	c[1]  = aux18 + r09;
+
+	aux20 = s22 + r02;
+	aux21 = aux20 + s23;
+	aux22 = aux21 + s32;
+	aux23 = aux22 + r03;
+	aux24 = aux23 + s24;
+	aux25 = aux24 + s42;
+	aux26 = aux25 + r09;
+	aux27 = aux26 + s25;
+	aux28 = aux27 + s52;
+	c[2]  = aux28 + r10;
+
+	aux30 = s33 + r03;
+	aux31 = aux30 + s34;
+	aux32 = aux31 + s43;
+	aux33 = aux32 + r04;
+	aux34 = aux33 + s35;
+	aux35 = aux34 + s53;
+	aux36 = aux35 + r10;
+	aux37 = aux36 + s36;
+	aux38 = aux37 + s63;
+	c[3]  = aux38 + r11;
+
+	aux40 = s44 + r04;
+	aux41 = aux40 + s45;
+	aux42 = aux41 + s54;
+	aux43 = aux42 + r05;
+	aux44 = aux43 + s46;
+	aux45 = aux44 + s64;
+	aux46 = aux45 + r11;
+	aux47 = aux46 + s40;
+	aux48 = aux47 + s04;
+	c[4]  = aux48 + r12;
+
+	aux50 = s55 + r05;
+	aux51 = aux50 + s56;
+	aux52 = aux51 + s65;
+	aux53 = aux52 + r06;
+	aux54 = aux53 + s50;
+	aux55 = aux54 + s05;
+	aux56 = aux55 + r12;
+	aux57 = aux56 + s51;
+	aux58 = aux57 + s15;
+	c[5]  = aux58 + r13;
+
+	aux60 = s66 + r06;
+	aux61 = aux60 + s60;
+	aux62 = aux61 + s06;
+	aux63 = aux62 + r00;
+	aux64 = aux63 + s61;
+	aux65 = aux64 + s16;
+	aux66 = aux65 + r13;
+	aux67 = aux66 + s62;
+	aux68 = aux67 + s26;
+	c[6]  = aux68 + r07;
+end
+
+para NI sch7_NI
+(* para SNI sch7_NI *)

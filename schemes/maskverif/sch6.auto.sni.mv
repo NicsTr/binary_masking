@@ -1,0 +1,107 @@
+proc sch6_SNI:
+	inputs: a[0:5], b[0:5]
+	outputs: c[0:5]
+	randoms: r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, r20, r21;
+
+	s00 := a[0]*b[0];
+	s01 := a[0]*b[1];
+	s02 := a[0]*b[2];
+	s03 := a[0]*b[3];
+	s04 := a[0]*b[4];
+	s05 := a[0]*b[5];
+	s10 := a[1]*b[0];
+	s11 := a[1]*b[1];
+	s12 := a[1]*b[2];
+	s13 := a[1]*b[3];
+	s14 := a[1]*b[4];
+	s15 := a[1]*b[5];
+	s20 := a[2]*b[0];
+	s21 := a[2]*b[1];
+	s22 := a[2]*b[2];
+	s23 := a[2]*b[3];
+	s24 := a[2]*b[4];
+	s25 := a[2]*b[5];
+	s30 := a[3]*b[0];
+	s31 := a[3]*b[1];
+	s32 := a[3]*b[2];
+	s33 := a[3]*b[3];
+	s34 := a[3]*b[4];
+	s35 := a[3]*b[5];
+	s40 := a[4]*b[0];
+	s41 := a[4]*b[1];
+	s42 := a[4]*b[2];
+	s43 := a[4]*b[3];
+	s44 := a[4]*b[4];
+	s45 := a[4]*b[5];
+	s50 := a[5]*b[0];
+	s51 := a[5]*b[1];
+	s52 := a[5]*b[2];
+	s53 := a[5]*b[3];
+	s54 := a[5]*b[4];
+	s55 := a[5]*b[5];
+
+	aux00 = s00 + r00;
+	aux01 = aux00 + s01;
+	aux02 = aux01 + s10;
+	aux03 = aux02 + r01;
+	aux04 = aux03 + s02;
+	aux05 = aux04 + s20;
+	aux06 = aux05 + r06;
+	aux07 = aux06 + s03;
+	aux08 = aux07 + s30;
+	aux09 = aux08 + r07;
+	c[0]  = aux09 + r20;
+
+	aux10 = s11 + r01;
+	aux11 = aux10 + s12;
+	aux12 = aux11 + s21;
+	aux13 = aux12 + r02;
+	aux14 = aux13 + s13;
+	aux15 = aux14 + s31;
+	aux16 = aux15 + r07;
+	aux17 = aux16 + s14;
+	aux18 = aux17 + s41;
+	aux19 = aux18 + r08;
+	c[1]  = aux19 + r21;
+
+	aux20 = s22 + r02;
+	aux21 = aux20 + s23;
+	aux22 = aux21 + s32;
+	aux23 = aux22 + r03;
+	aux24 = aux23 + s24;
+	aux25 = aux24 + s42;
+	aux26 = aux25 + r08;
+	aux27 = aux26 + s25;
+	aux28 = aux27 + s52;
+	c[2]  = aux28 + r09;
+
+	aux30 = s33 + r03;
+	aux31 = aux30 + s34;
+	aux32 = aux31 + s43;
+	aux33 = aux32 + r04;
+	aux34 = aux33 + s35;
+	aux35 = aux34 + s53;
+	aux36 = aux35 + r09; 
+	c[3]  = aux36 + r06;
+
+	aux40 = s44 + r04;
+	aux41 = aux40 + s45;
+	aux42 = aux41 + s54;
+	aux43 = aux42 + r05;
+	aux44 = aux43 + s40;
+	aux45 = aux44 + s04;
+	c[4]  = aux45 + r20;
+
+	aux50 = s55 + r05;
+	aux51 = aux50 + s50;
+	aux52 = aux51 + s05;
+	aux53 = aux52 + r00;
+	aux54 = aux53 + s51;
+	aux55 = aux54 + s15;
+	c[5]  = aux55 + r21;
+end
+
+(*
+Probing sch6_SNI
+NI sch6_SNI *)
+para order 5 SNI sch6_SNI
