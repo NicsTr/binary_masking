@@ -1,218 +1,294 @@
 #include <immintrin.h>
+#include <string.h>
 #include <stdint.h>
-#include "checker.h"
+#include <stdio.h>
+
+#include "combinations.h"
 #include "prob_desc.h"
+#include "checker_helper.h"
+#include "checker.h"
 
 #ifdef VECT
-#include "popcount256_16.h"
 
-void init_sh_all(__m256i probes_a_all[NB_PR], __m256i probes_b_all[NB_PR])
+int check_full(int check_sni)
 {
-    uint64_t i;
-    for (i = 0; i < NB_PR; i++) {
-        probes_a_all[i] = _mm256_loadu_si256((__m256i*)(probes_sh_a[i]));
-        probes_b_all[i] = _mm256_loadu_si256((__m256i*)(probes_sh_b[i]));
+    uint64_t k;
+    uint64_t nb_internal;
+    uint64_t comb[D + 1];
+    struct comb_t comb_struct;
+    struct comb_diff_t comb_diff;
+    uint64_t probes_r_curr;
+    int attack_sni = 0;
+    int attack_ni = 0;
+    uint64_t c = 0;
+    __m256i probes_a_curr;
+    __m256i probes_b_curr;
+    __m256i probes_a_all[NB_PR];
+    __m256i probes_b_all[NB_PR];
+    init_sh_all(probes_a_all, probes_b_all);
+
+    printf("Checking security for %s...\n", filename);
+    if (check_sni) {
+        printf("Stopping at first SNI attack\n");
+    } else {
+        printf("Stopping at first NI attack\n");
     }
-}
 
-void init_sh_curr(__m256i *probes_sh_curr, __m256i probes_sh_all[NB_PR],
-        uint64_t *combination, uint64_t k)
-{
-    *probes_sh_curr = _mm256_setzero_si256();
-    uint64_t i, j;
-    for (i = 0; i < k; i++) {
-        j = combination[i];
-        *probes_sh_curr = _mm256_xor_si256(*probes_sh_curr, probes_sh_all[j]);
-    }
-}
+    for (k = 1; k <= D; k++) {
+        printf("\nAttacks with %lu probes:\n", k);
+        init_combination(&comb_struct, comb, k, NB_PR);
+        init_sh_curr(&probes_a_curr, probes_a_all, comb, k);
+        init_sh_curr(&probes_b_curr, probes_b_all, comb, k);
+        init_r_curr(&probes_r_curr, comb, k);
 
-void init_r_curr(uint64_t *probes_r_curr, uint64_t *combination, uint64_t k)
-{
-    uint64_t i, j;
-    *probes_r_curr = 0;
-    for (i = 0; i < k; i++) {
-        j = combination[i];
-        *probes_r_curr ^= probes_r[j];
-    }
-}
+        c = 0;
+        nb_internal = k;
+        while (!attack_ni && !attack_sni) {
+            c++;
+            if (!(c % 100000000)) {
+                printf("\rSets of probes already visited: %lu", c);
+                fflush(stdout);
+            }
+            if (check_sni) {
+                attack_sni = check_attack_sni(k, nb_internal, probes_r_curr, probes_a_curr, probes_b_curr);
+            } else {
+                attack_ni = check_attack_ni(k, probes_r_curr, probes_a_curr, probes_b_curr);
+            }
+            next_combination(&comb_struct, &comb_diff);
+            if (comb_struct.done) break;
 
+            // Adjust the number of internal probes
+            if (check_sni) {
+                if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
+                if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
+            }
 
-int check_attack_ni(uint64_t nb_probes, uint64_t r_sum, __m256i sh_sum_a,
-        __m256i sh_sum_b)
-{
-    uint64_t nb_rand = __builtin_popcountl(r_sum);
-    uint64_t nb_a;
-    uint64_t nb_b;
+            probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[comb_diff.to_del]);
+            probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[comb_diff.to_add]);
 
-    /* Is there enough probes left to cancel out remaining random? */
-    if (nb_rand + nb_probes <= D) {
-        /* Is the minimum number of probes needed to build an attack on the
-         * a_i strictly greater than D? */
-        nb_a = popcount256_16(sh_sum_a);
-        if (nb_rand + nb_probes + (NB_SH - nb_a) <= D) {
-            return 1;
+            probes_b_curr = _mm256_xor_si256(probes_b_curr, probes_b_all[comb_diff.to_del]);
+            probes_b_curr = _mm256_xor_si256(probes_b_curr, probes_b_all[comb_diff.to_add]);
+
+            probes_r_curr ^= probes_r[comb_diff.to_del] ^ probes_r[comb_diff.to_add];
         }
 
-        /* Same on the b_j */
-        nb_b = popcount256_16(sh_sum_b);
-        if (nb_rand + nb_probes + (NB_SH - nb_b) <= D) {
-            return 1;
+        if (attack_ni || attack_sni) {
+            printf("\n");
+            print_combination(comb_struct);
+            printf("to_del=%lu\n", comb_diff.to_del);
+            printf("to_add=%lu\n", comb_diff.to_add);
+            printf("\n------- UNSAFE -------\n");
+            if (attack_ni) printf("ATTACK NI FOUND\n");
+            if (attack_sni) printf("ATTACK SNI FOUND\n");
+            return 0;
         }
+        printf("\rSets of probes already visited: %lu", c);
+        fflush(stdout);
+
     }
-    return 0;
+
+    printf("\n-------  SAFE  -------\n");
+    return 1;
+
 }
 
-int check_attack_sni(uint64_t nb_probes, uint64_t nb_internal, uint64_t r_sum,
-        __m256i sh_sum_a, __m256i sh_sum_b)
+int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
 {
-    uint64_t nb_rand = __builtin_popcountl(r_sum);
-    uint64_t nb_a;
-    uint64_t nb_b;
+    uint64_t nb_internal;
+    struct comb_diff_t comb_diff;
+    uint64_t probes_r_curr;
+    int attack_sni = 0;
+    int attack_ni = 0;
+    uint64_t c = 0;
+    __m256i probes_a_curr;
+    __m256i probes_b_curr;
+    __m256i probes_a_all[NB_PR];
+    __m256i probes_b_all[NB_PR];
+    init_sh_all(probes_a_all, probes_b_all);
 
-    /* Is there enough probes left to cancel out remaining random? */
-    if (nb_rand + nb_probes <= D) {
-        /* Probes used to eliminate random are internal probes */
-        nb_internal += nb_rand;
+    init_sh_curr(&probes_a_curr, probes_a_all, comb_struct.combination, comb_struct.k);
+    init_sh_curr(&probes_b_curr, probes_b_all, comb_struct.combination, comb_struct.k);
+    init_r_curr(&probes_r_curr, comb_struct.combination, comb_struct.k);
 
-        nb_a = popcount256_16(sh_sum_a);
-        if (nb_a > nb_internal) {
-            return 1;
+    c = 0;
+    nb_internal = comb_struct.k;
+    while (!attack_ni && !attack_sni && c < nb) {
+        c++;
+
+        if (check_sni) {
+            attack_sni = check_attack_sni(comb_struct.k, nb_internal, probes_r_curr, probes_a_curr, probes_b_curr);
+        } else {
+            attack_ni = check_attack_ni(comb_struct.k, probes_r_curr, probes_a_curr, probes_b_curr);
+        }
+        next_combination(&comb_struct, &comb_diff);
+        if (comb_struct.done) break;
+
+        // Adjust the number of internal probes
+        if (check_sni) {
+            if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
+            if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
         }
 
-        nb_b = popcount256_16(sh_sum_b);
-        if (nb_b > nb_internal) {
-            return 1;
-        }
+        probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[comb_diff.to_del]);
+        probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[comb_diff.to_add]);
+
+        probes_b_curr = _mm256_xor_si256(probes_b_curr, probes_b_all[comb_diff.to_del]);
+        probes_b_curr = _mm256_xor_si256(probes_b_curr, probes_b_all[comb_diff.to_add]);
+
+        probes_r_curr ^= probes_r[comb_diff.to_del] ^ probes_r[comb_diff.to_add];
     }
-    return 0;
+
+    if (attack_ni || attack_sni) {
+        printf("\n");
+        print_combination(comb_struct);
+        printf("to_del=%lu\n", comb_diff.to_del);
+        printf("to_add=%lu\n", comb_diff.to_add);
+        printf("\n------- UNSAFE -------\n");
+        if (attack_ni) printf("ATTACK NI FOUND\n");
+        if (attack_sni) printf("ATTACK SNI FOUND\n");
+        return 0;
+    }
+
+    return 1;
 }
 
 #else
 
-void probes_sh_xor(uint64_t probes_sh_dst[NB_SH][SIZE_SH],
-        uint64_t probes_sh_src[NB_SH][SIZE_SH])
+int check_full(int check_sni)
 {
-    uint64_t i, j;
-    for (i = 0; i < NB_SH; i++) {
-        for (j = 0; j < SIZE_SH; j++) {
-            probes_sh_dst[i][j] ^= probes_sh_src[i][j];
-        }
-    }
-}
+    uint64_t k;
+    uint64_t nb_internal;
+    uint64_t comb[D + 1];
+    struct comb_t comb_struct;
+    struct comb_diff_t comb_diff;
+    uint64_t probes_r_curr[SIZE_R];
+    int attack_sni = 0;
+    int attack_ni = 0;
+    uint64_t c = 0;
+    uint64_t probes_a_curr[NB_SH][SIZE_SH];
+    uint64_t probes_b_curr[NB_SH][SIZE_SH];
 
-void probes_r_xor(uint64_t probes_r_dst[SIZE_R], uint64_t probes_r_src[SIZE_R])
-{
-    uint64_t i;
-    for (i = 0; i < SIZE_R; i++) {
-        probes_r_dst[i] ^= probes_r_src[i];
+    printf("Checking security for %s...\n", filename);
+    if (check_sni) {
+        printf("Stopping at first SNI attack\n");
+    } else {
+        printf("Stopping at first NI attack\n");
     }
-}
 
-uint64_t probes_r_count(uint64_t probes_r[SIZE_R])
-{
-    uint64_t i, c = 0;
-    for (i = 0; i < SIZE_R; i++) {
-        c += __builtin_popcountl(probes_r[i]);
-    }
-    return c;
-}
+    for (k = 1; k <= D; k++) {
+        printf("\nAttacks with %lu probes:\n", k);
+        init_combination(&comb_struct, comb, k, NB_PR);
+        init_sh_curr(probes_a_curr, probes_sh_a, comb, k);
+        init_sh_curr(probes_b_curr, probes_sh_b, comb, k);
+        init_r_curr(probes_r_curr, comb, k);
 
-uint64_t probes_sh_count(uint64_t probes_sh[NB_SH][SIZE_SH])
-{
-    uint64_t i, j, c = 0;
-    for (i = 0; i < NB_SH; i++) {
-        for (j = 0; j < SIZE_SH; j++) {
-            if (probes_sh[i][j] != 0) {
-                c += 1;
-                break;
+        c = 0;
+        nb_internal = k;
+        while (!attack_ni && !attack_sni) {
+            c++;
+            if (!(c % 100000000)) {
+                printf("\rSets of probes already visited: %lu", c);
+                fflush(stdout);
             }
+            if (check_sni) {
+                attack_sni = check_attack_sni(k, nb_internal, probes_r_curr, probes_a_curr, probes_b_curr);
+            } else {
+                attack_ni = check_attack_ni(k, probes_r_curr, probes_a_curr, probes_b_curr);
+            }
+            next_combination(&comb_struct, &comb_diff);
+            if (comb_struct.done) break;
+
+            // Adjust the number of internal probes
+            if (check_sni) {
+                if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
+                if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
+            }
+
+            probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_del]);
+            probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_add]);
+
+            probes_sh_xor(probes_b_curr, probes_sh_b[comb_diff.to_del]);
+            probes_sh_xor(probes_b_curr, probes_sh_b[comb_diff.to_add]);
+
+            probes_r_xor(probes_r_curr, probes_r[comb_diff.to_del]);
+            probes_r_xor(probes_r_curr, probes_r[comb_diff.to_add]);
         }
-    }
-    return c;
-}
 
-void init_sh_curr(uint64_t probes_sh_curr[NB_SH][SIZE_SH],
-        uint64_t probes_sh_all[NB_PR][NB_SH][SIZE_SH], uint64_t *combination,
-        uint64_t k)
-{
-    uint64_t i, j;
-
-    /* Zero init */
-    for (i = 0; i < NB_SH; i++) {
-        for (j = 0; j < SIZE_SH; j++) {
-            probes_sh_curr[i][j] = 0;
-        }
-    }
-
-    /* Adding the right probes */
-    for (i = 0; i < k; i++) {
-            j = combination[i];
-            probes_sh_xor(probes_sh_curr, probes_sh_all[j]);
-    }
-}
-
-void init_r_curr(uint64_t probes_r_curr[SIZE_R], uint64_t *combination, uint64_t k)
-{
-    uint64_t i, j;
-
-    for (i = 0; i < SIZE_R; i++) {
-        probes_r_curr[i] = 0;
-    }
-
-    for (i = 0; i < k; i++) {
-        j = combination[i];
-        probes_r_xor(probes_r_curr, probes_r[j]);
-    }
-}
-
-int check_attack_ni(uint64_t nb_probes, uint64_t r_sum[SIZE_R],
-        uint64_t sh_sum_a[NB_SH][SIZE_SH], uint64_t sh_sum_b[NB_SH][SIZE_SH])
-{
-    uint64_t nb_rand = probes_r_count(r_sum);
-    uint64_t nb_a;
-    uint64_t nb_b;
-
-    /* Is there enough probes left to cancel out remaining random? */
-    if (nb_rand + nb_probes <= D) {
-        /* Is the minimum number of probes needed to build an attack on the
-         * a_i strictly greater than D? */
-        nb_a = probes_sh_count(sh_sum_a);
-        if (nb_rand + nb_probes + (NB_SH - nb_a) <= D) {
+        if (attack_ni || attack_sni) {
+            printf("\n");
+            print_combination(comb_struct);
+            printf("to_del=%lu\n", comb_diff.to_del);
+            printf("to_add=%lu\n", comb_diff.to_add);
+            printf("\n------- UNSAFE -------\n");
+            if (attack_ni) printf("ATTACK NI FOUND\n");
+            if (attack_sni) printf("ATTACK SNI FOUND\n");
             return 1;
         }
+        printf("\rSets of probes already visited: %lu", c);
+        fflush(stdout);
 
-        /* Same on the b_j */
-        nb_b = probes_sh_count(sh_sum_b);
-        if (nb_rand + nb_probes + (NB_SH - nb_b) <= D) {
-            return 1;
-        }
     }
+
+    printf("\n-------  SAFE  -------\n");
     return 0;
+
 }
 
-int check_attack_sni(uint64_t nb_probes, uint64_t nb_internal,
-        uint64_t r_sum[SIZE_R], uint64_t sh_sum_a[NB_SH][SIZE_SH],
-        uint64_t sh_sum_b[NB_SH][SIZE_SH])
+int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
 {
-    uint64_t nb_rand = probes_r_count(r_sum);
-    uint64_t nb_a;
-    uint64_t nb_b;
+    uint64_t nb_internal;
+    struct comb_diff_t comb_diff;
+    uint64_t probes_r_curr[SIZE_R];
+    int attack_sni = 0;
+    int attack_ni = 0;
+    uint64_t c = 0;
+    uint64_t probes_a_curr[NB_SH][SIZE_SH];
+    uint64_t probes_b_curr[NB_SH][SIZE_SH];
 
-    /* Is there enough probes left to cancel out remaining random? */
-    if (nb_rand + nb_probes <= D) {
-        /* Probes used to eliminate random are internal probes */
-        nb_internal += nb_rand;
+    init_sh_curr(probes_a_curr, probes_sh_a, comb_struct.combination, comb_struct.k);
+    init_sh_curr(probes_b_curr, probes_sh_b, comb_struct.combination, comb_struct.k);
+    init_r_curr(probes_r_curr, comb_struct.combination, comb_struct.k);
 
-        nb_a = probes_sh_count(sh_sum_a);
-        if (nb_a > nb_internal) {
-            return 1;
+    c = 0;
+    nb_internal = comb_struct.k;
+    while (!attack_ni && !attack_sni && c < nb) {
+        c++;
+
+        if (check_sni) {
+            attack_sni = check_attack_sni(comb_struct.k, nb_internal, probes_r_curr, probes_a_curr, probes_b_curr);
+        } else {
+            attack_ni = check_attack_ni(comb_struct.k, probes_r_curr, probes_a_curr, probes_b_curr);
+        }
+        next_combination(&comb_struct, &comb_diff);
+        if (comb_struct.done) break;
+
+        // Adjust the number of internal probes
+        if (check_sni) {
+            if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
+            if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
         }
 
-        nb_b = probes_sh_count(sh_sum_b);
-        if (nb_b > nb_internal) {
-            return 1;
-        }
+        probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_del]);
+        probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_add]);
+
+        probes_sh_xor(probes_b_curr, probes_sh_b[comb_diff.to_del]);
+        probes_sh_xor(probes_b_curr, probes_sh_b[comb_diff.to_add]);
+
+        probes_r_xor(probes_r_curr, probes_r[comb_diff.to_del]);
+        probes_r_xor(probes_r_curr, probes_r[comb_diff.to_add]);
     }
-    return 0;
+
+    if (attack_ni || attack_sni) {
+        printf("\n");
+        print_combination(comb_struct);
+        printf("to_del=%lu\n", comb_diff.to_del);
+        printf("to_add=%lu\n", comb_diff.to_add);
+        printf("\n------- UNSAFE -------\n");
+        if (attack_ni) printf("ATTACK NI FOUND\n");
+        if (attack_sni) printf("ATTACK SNI FOUND\n");
+        return 0;
+    }
+
+    return 1;
 }
 #endif /* VECT */
