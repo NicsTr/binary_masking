@@ -4,23 +4,49 @@
 
 #include "combinations.h"
 
-void print_combination(uint64_t *combination, uint64_t k)
+uint64_t nCr(uint64_t n, uint64_t k)
+{
+    uint64_t i, j;
+    uint64_t row[n + 1];
+
+    k = (n - k < k) ? (n - k) : k;
+
+    // initialize by the first row
+    row[0] = 1; // this is the value of C(0, 0)
+
+    for(i = 1; i <= n; i++) {
+        row[i] = 0;
+        for(j = i; j > 0; j--) {
+             // from the recurrence C(n, r) = C(n - 1, r - 1) + C(n - 1, r)
+             row[j] += row[j - 1];
+        }
+    }
+
+    return row[k];
+}
+
+void print_combination(struct comb_t comb_struct)
 {
     uint64_t i;
-    for (i = 0; i < k; i++) {
-        printf("%lu ", combination[i]);
+    for (i = 0; i < comb_struct.k; i++) {
+        printf("%lu ", comb_struct.combination[i]);
     }
     printf("\n");
 //    printf("%d %d\n", combination[k], combination[k + 1]);
 }
 
-void init_combination(uint64_t *combination,  uint64_t k, uint64_t n)
+void init_combination(struct comb_t *comb_struct, uint64_t *combination,  uint64_t k, uint64_t n)
 {
     uint64_t j;
     for (j = 0; j < k; j++) {
         combination[j] = j;
     }
     combination[k] = n;
+
+    comb_struct->combination = combination;
+    comb_struct->done = 0;
+    comb_struct->k = k;
+    comb_struct->n = n;
 }
 
 /*
@@ -32,73 +58,95 @@ void init_combination(uint64_t *combination,  uint64_t k, uint64_t n)
  *  Return the indexes that just changed or -1 if its the last combination
  *
  */
-int32_t next_combination(uint64_t *combination, uint64_t k)
+void next_combination(struct comb_t *comb_struct, struct comb_diff_t *comb_diff)
 {
-    uint64_t to_del, to_add;
     uint64_t j;
+    uint64_t *comb = comb_struct->combination;
 
-    if (k % 2) {
+    if (comb_struct->k % 2) {
         // k is odd
         // R3 : easy case
-        if (combination[0] + 1 < combination[1]) {
-            to_del = combination[0];
-            to_add = combination[0] + 1;
-            combination[0]++;
-            return (to_del << 16) | to_add;
+        if (comb[0] + 1 < comb[1]) {
+            comb_diff->to_del = comb[0];
+            comb_diff->to_add = comb[0] + 1;
+            comb[0]++;
+            return;
         }
 
         j = 1;
     } else {
         // k is even
         // R3 : easy case
-        if (combination[0] > 0) {
-            to_del = combination[0];
-            to_add = combination[0] - 1;
-            combination[0]--;
-            return (to_del << 16) | to_add;
+        if (comb[0] > 0) {
+            comb_diff->to_del = comb[0];
+            comb_diff->to_add = comb[0] - 1;
+            comb[0]--;
+            return;
         }
 
         j = 1;
-        // R5 : try to increase combination[j]
-        // at this point combination[j-1] = j-1
-        if (combination[j] + 1 < combination[j+1]) {
-            to_del = combination[j - 1];
-            to_add = combination[j] + 1;
-            combination[j-1] = combination[j];
-            combination[j]++;
-            return (to_del << 16) | to_add;
+        // R5 : try to increase comb[j]
+        // at this point comb[j-1] = j-1
+        if (comb[j] + 1 < comb[j+1]) {
+            comb_diff->to_del = comb[j - 1];
+            comb_diff->to_add = comb[j] + 1;
+            comb[j-1] = comb[j];
+            comb[j]++;
+            return;
         }
         j++;
 
     }
 
-    while (j < k) {
-        // R4 : try to decrease combination[j]
-        // at this point combination[j] = combination[j-1] + 1
-        if (combination[j] > j) {
-            to_del = combination[j];
-            to_add = j - 1;
-            combination[j] = combination[j-1];
-            combination[j-1] = j-1;
+    while (j < comb_struct->k) {
+        // R4 : try to decrease comb[j]
+        // at this point comb[j] = comb[j-1] + 1
+        if (comb[j] > j) {
+            comb_diff->to_del = comb[j];
+            comb_diff->to_add = j - 1;
+            comb[j] = comb[j-1];
+            comb[j-1] = j-1;
             break;
         }
         j++;
 
-        // R5 : try to increase combination[j]
-        // at this point combination[j-1] = j-1
-        if (combination[j] + 1 < combination[j+1]) {
-            to_del = combination[j - 1];
-            to_add = combination[j] + 1;
-            combination[j-1] = combination[j];
-            combination[j]++;
+        // R5 : try to increase comb[j]
+        // at this point comb[j-1] = j-1
+        if (comb[j] + 1 < comb[j+1]) {
+            comb_diff->to_del = comb[j - 1];
+            comb_diff->to_add = comb[j] + 1;
+            comb[j-1] = comb[j];
+            comb[j]++;
             break;
         }
         j++;
     }
-    if (j == k) {
-        return 0; // No more combination
+    if (j == comb_struct->k) {
+        comb_struct->done = 1;
+        return; // No more comb
     }
-    return (to_del << 16) | to_add;
+}
+
+void unrank(uint64_t rank, struct comb_t comb_struct)
+{
+    int64_t i;
+    uint64_t *comb = comb_struct.combination;
+    uint64_t tmp;
+    uint64_t k = comb_struct.k;
+
+    if (rank >= nCr(comb_struct.n, k)) {
+        rank = nCr(comb_struct.n, k) - 1;
+    }
+
+    for (i = k - 1; i >= 0; i--) {
+        comb[i] = i;
+        tmp = nCr(comb[i] + 1, i + 1) - 1;
+        while (tmp < rank) {
+            comb[i] += 1;
+            tmp = nCr(comb[i] + 1, i + 1) - 1;
+        }
+        rank = tmp - rank;
+    }
 
 }
 

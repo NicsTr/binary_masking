@@ -32,7 +32,7 @@ def check_redundant(M, Mb, mask_r, mask_s, d):
     res = []
     for i in range(d):
         res.append(dict())
-        size2 = mb.nrows()
+        size2 = Mb.nrows()
         for j in itertools.combinations(range(size2), i):
             v2 = [0]*size2
             for k in j:
