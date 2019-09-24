@@ -171,16 +171,19 @@ if __name__ == "__main__":
     
     
     # Exclude redundant probes
-    pos_to_keep= []
-    for i in range(len(probes_expl)):
-        s1 = probes_expl[i].split(" - ")[0]
-        if s1.count('s') % 2:
-            pos_to_keep.append(i)
-    
-    probes_r = probes_r.matrix_from_columns(pos_to_keep)
-    probes_sh = [probes_sh[i] for i in pos_to_keep]
-    probes_expl = [probes_expl[i] for i in pos_to_keep]
-    
+    print("Section 5.5 describes a way to filter out some probes.")
+    ans = raw_input("Do you want to do so (in the exact same way)? (y/n)")
+    if 'y' in ans or 'Y' in ans:
+        pos_to_keep= []
+        for i in range(len(probes_expl)):
+            s1 = probes_expl[i].split(" - ")[0]
+            if s1.count('s') % 2:
+                pos_to_keep.append(i)
+
+        probes_r = probes_r.matrix_from_columns(pos_to_keep)
+        probes_sh = [probes_sh[i] for i in pos_to_keep]
+        probes_expl = [probes_expl[i] for i in pos_to_keep]
+
     
     # Exclude probes with only random values
     pos_to_keep = []
