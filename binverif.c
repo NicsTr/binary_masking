@@ -164,6 +164,10 @@ int main(int argc, char **argv)
 
             /* Create `nb_thr` threads and call the wrapper with the right
              * parameters */
+#ifdef BOUNDARY_CHECKS
+			uint64_t last_check = 0;
+			uint64_t first_check = 0;
+#endif
             for (i = 0; i < nb_thr; i++) {
                 all_partial_thread[i] = calloc(1, sizeof(struct partial_thread_t));
                 comb_struct = calloc(1, sizeof(struct comb_t));
@@ -177,6 +181,21 @@ int main(int argc, char **argv)
                 all_partial_thread[i]->barrier = &barrier;
                 all_partial_thread[i]->is_safe_mut = &is_safe_mut;
                 all_partial_thread[i]->sub_thread_mut = &sub_thread_mut;
+
+#ifdef BOUNDARY_CHECKS
+				first_check = i*chunk_size/nb_thr + offset;
+				if (i > 0)
+				{
+					if (first_check > (last_check + 1))
+					   printf("NOOOOOO %lu %lu %lu\n", i, last_check, first_check);
+				}
+				last_check = i*chunk_size/nb_thr + offset+ chunk_size/nb_thr;
+				if (i == nb_thr - 1)
+				{
+					if (last_check < (offset + chunk_size - 1))
+					   printf("NOOOOOO %lu %lu %lu\n", i, last_check, (offset + chunk_size - 1));
+				}
+#endif
 
                 pthread_create(&threads[i], NULL, (void *) thread_wrapper, all_partial_thread[i]);
             }
