@@ -23,6 +23,7 @@ void usage(char *bin_name)
     fprintf(stderr, "\t-p nb_threads: Divide the verification effort among nb_threads threads\n");
     fprintf(stderr, "\t-n nb_sets_max: Don't paralellize until the number of sets to check is greater than 2^nb_sets_max\n");
     fprintf(stderr, "\t-w weight: Only check attack sets of weight weight\n");
+    fprintf(stderr, "\t-c chunk_id num_chunks: (for parallel verification only) only check the chunk_id^th (starting from 0) 1/num_chunks fraction of the attack sets\n");
 }
 
 void stop_threads(pthread_t *threads, uint32_t nb_thr)
@@ -74,10 +75,14 @@ int main(int argc, char **argv)
     uint64_t nb_sets_max = 25;
     int is_safe = 1;
     uint64_t nb_sets;
+    uint64_t chunk_size;
+    uint64_t offset;
     struct partial_thread_t **all_partial_thread;
     struct comb_t *comb_struct;
     uint64_t *comb;
 	int weight = -1;
+	int chunk_id = -1;
+	int num_chunk = -1;
     pthread_t *threads;
     pthread_barrier_t barrier;
     pthread_mutex_t sub_thread_mut, is_safe_mut;
@@ -96,6 +101,10 @@ int main(int argc, char **argv)
         } else if ((uint64_t) argc > i + 1 && !strcmp(argv[i], "-w")) {
             weight = atoi(argv[i + 1]);
             i += 2;
+        } else if ((uint64_t) argc > i + 1 && !strcmp(argv[i], "-c")) {
+            chunk_id = atoi(argv[i + 1]);
+            num_chunk = atoi(argv[i + 2]);
+            i += 3;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-h")) {
             usage(argv[0]);
             return -1;
@@ -136,6 +145,18 @@ int main(int argc, char **argv)
             free(comb);
             free(comb_struct);
         } else {
+			/* Chunkify */
+			if (num_chunk != -1)
+			{	
+				chunk_size = (nb_sets/num_chunk) + 1; // play it stupid safe
+				offset = chunk_id*chunk_size;
+				printf("/* Checking attack sets of %d probes from #%lu to #%lu out of #%lu */\n", k, offset, (offset+chunk_size - 1) % nb_sets, nb_sets);
+			}
+			else
+			{
+				chunk_size = nb_sets;
+				offset = 0;
+			}
             /* Init pthread struct to control flow */
             pthread_mutex_init(&is_safe_mut, NULL);
             pthread_mutex_init(&sub_thread_mut, NULL);
@@ -148,9 +169,9 @@ int main(int argc, char **argv)
                 comb_struct = calloc(1, sizeof(struct comb_t));
                 comb = calloc(k + 1, sizeof(uint64_t));
                 init_combination(comb_struct, comb, k, NB_PR);
-                unrank(i*nb_sets/nb_thr, *comb_struct);
+                unrank(i*chunk_size/nb_thr + offset, *comb_struct);
                 all_partial_thread[i]->comb_struct = comb_struct;
-                all_partial_thread[i]->nb = (1 + nb_sets/nb_thr);
+                all_partial_thread[i]->nb = (1 + chunk_size/nb_thr);
                 all_partial_thread[i]->check_sni = check_sni;
                 all_partial_thread[i]->is_safe = &is_safe;
                 all_partial_thread[i]->barrier = &barrier;
@@ -188,6 +209,17 @@ int main(int argc, char **argv)
         }
 
         if (!is_safe) break;
+		if (num_chunk != -1)
+		{	
+			chunk_size = (nb_sets/num_chunk) + 1; // play it stupid safe
+			offset = chunk_id*chunk_size;
+			printf("\n/*... checked */\n");
+		}
+		else
+		{
+			printf("\rSets of probes already visited: %lu", nb_sets);
+		}
+        fflush(stdout);
     }
 
     free(all_partial_thread);
