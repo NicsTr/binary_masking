@@ -10,9 +10,8 @@
 
 #ifdef VECT
 
-int check_full(int check_sni)
+int check_full(int check_sni, int weight)
 {
-    uint64_t k;
     uint64_t nb_internal;
     uint64_t comb[D + 1];
     struct comb_t comb_struct;
@@ -34,8 +33,8 @@ int check_full(int check_sni)
         printf("Stopping at first NI attack\n");
     }
 
-    for (k = 1; k <= D; k++) {
-        printf("\nAttacks with %lu probes:\n", k);
+    for (int k = (weight == - 1 ? 1 : weight); k <= (weight == -1 ? D : weight); k++) {
+        printf("\nAttacks with %d probes:\n", k);
         init_combination(&comb_struct, comb, k, NB_PR);
         init_sh_curr(&probes_a_curr, probes_a_all, comb, k);
         init_sh_curr(&probes_b_curr, probes_b_all, comb, k);
@@ -87,8 +86,12 @@ int check_full(int check_sni)
 
     }
 
-    printf("\n-------  SAFE  -------\n");
-    return 1;
+	if (weight == -1) 
+		printf("\n-------  SAFE  -------\n");
+	else
+		printf("\n------- No attack found with %d probes -------\n", weight);
+    
+	return 1;
 
 }
 

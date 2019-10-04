@@ -22,6 +22,7 @@ void usage(char *bin_name)
     fprintf(stderr, "Usage: %s [--sni] [-p nb_threads] [-n nb_sets_max] [-h, --help]\n", bin_name);
     fprintf(stderr, "\t-p nb_threads: Divide the verification effort among nb_threads threads\n");
     fprintf(stderr, "\t-n nb_sets_max: Don't paralellize until the number of sets to check is greater than 2^nb_sets_max\n");
+    fprintf(stderr, "\t-w weight: Only check attack sets of weight weight\n");
 }
 
 void stop_threads(pthread_t *threads, uint32_t nb_thr)
@@ -72,11 +73,11 @@ int main(int argc, char **argv)
     uint32_t nb_thr = 1;
     uint64_t nb_sets_max = 25;
     int is_safe = 1;
-    uint64_t k;
     uint64_t nb_sets;
     struct partial_thread_t **all_partial_thread;
     struct comb_t *comb_struct;
     uint64_t *comb;
+	int weight = -1;
     pthread_t *threads;
     pthread_barrier_t barrier;
     pthread_mutex_t sub_thread_mut, is_safe_mut;
@@ -92,6 +93,9 @@ int main(int argc, char **argv)
         } else if ((uint64_t) argc > i + 1 && !strcmp(argv[i], "-n")) {
             nb_sets_max = atoi(argv[i + 1]);
             i += 2;
+        } else if ((uint64_t) argc > i + 1 && !strcmp(argv[i], "-w")) {
+            weight = atoi(argv[i + 1]);
+            i += 2;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-h")) {
             usage(argv[0]);
             return -1;
@@ -103,7 +107,7 @@ int main(int argc, char **argv)
 
 
     if (nb_thr == 1)
-        return check_full(check_sni);
+        return check_full(check_sni, weight/* ugly */);
 
 
     /* Parallelization */
@@ -117,13 +121,14 @@ int main(int argc, char **argv)
 
     all_partial_thread = calloc(nb_thr, sizeof(struct partial_thread_t *));
     threads = calloc(nb_thr, sizeof(pthread_t));
-    for (k = 1; k <= D; k++) {
-        printf("\nSearching for an attack with %lu probes:\n", k);
+    for (int k = (weight == - 1 ? 1 : weight); k <= (weight == -1 ? D : weight); k++) {
+        printf("\nSearching for an attack with %d probes:\n", k);
         nb_sets = nCr(NB_PR, k);
         if (nb_sets < (uint64_t) 2 << nb_sets_max) {
             /* Too small to multithread */
-            printf("/* Too small to multithread %lu */\n", k);
-            printf("/* Checking all %lu sets (unless an attack is found) */\n", nb_sets);
+            printf("/* Too small to multithread %d */\n", k);
+            if (weight != -1)
+				printf("/* Checking all %lu sets (unless an attack is found) */\n", nb_sets);
             comb_struct = calloc(1, sizeof(struct comb_t));
             comb = calloc(k + 1, sizeof(uint64_t));
             init_combination(comb_struct, comb, k, NB_PR);
@@ -189,7 +194,10 @@ int main(int argc, char **argv)
     free(threads);
 
     if (is_safe) {
-        printf("\n-------  SAFE  -------\n");
+		if (weight == -1) 
+			printf("\n-------  SAFE  -------\n");
+		else
+			printf("\n------- No attack found with %d probes -------\n", weight);
     } else {
         printf("\n------- UNSAFE -------\n");
     }
