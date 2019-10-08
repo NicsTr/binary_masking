@@ -2,7 +2,7 @@
 
 This repository contains software and additional data related to the paper
 _High-order private multiplication in characteristic two revisited_ by Nicolas Bordes and Pierre Karpman,
-available as the [Eprint 2019/1165][https://eprint.iacr.org/2019/1165] tech report.
+available as the [Eprint 2019/1165](https://eprint.iacr.org/2019/1165) tech report.
 
 The tool in the main directory can be used to verify the
 schemes found in the [`schemes`](/schemes/) folder or other schemes of the same
