@@ -41,7 +41,7 @@ int check_full(int check_sni, int weight)
         init_r_curr(&probes_r_curr, comb, k);
 
         c = 0;
-        nb_internal = k;
+        nb_internal = k  > (NB_PR - NB_SH) ? (NB_PR - NB_SH) : k; // all starting probes are internal, except in the very odd case where there's so few of them
         while (!attack_ni && !attack_sni) {
             c++;
             if (!(c % 100000000)) {
@@ -114,7 +114,10 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
     init_r_curr(&probes_r_curr, comb_struct.combination, comb_struct.k);
 
     c = 0;
-    nb_internal = comb_struct.k;
+	nb_internal = 0;
+	for (uint64_t i = 0; i < comb_struct.k; i++)
+		nb_internal += comb_struct.combination[i] < (NB_PR - NB_SH) ? 1 : 0;
+
     while (!attack_ni && !attack_sni && c < nb) {
         c++;
 
@@ -186,7 +189,7 @@ int check_full(int check_sni)
         init_r_curr(probes_r_curr, comb, k);
 
         c = 0;
-        nb_internal = k;
+        nb_internal = k  > (NB_PR - NB_SH) ? (NB_PR - NB_SH) : k;
         while (!attack_ni && !attack_sni) {
             c++;
             if (!(c % 100000000)) {
@@ -253,8 +256,11 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
     init_r_curr(probes_r_curr, comb_struct.combination, comb_struct.k);
 
     c = 0;
-    nb_internal = comb_struct.k;
-    while (!attack_ni && !attack_sni && c < nb) {
+	nb_internal = 0;
+	for (uint64_t i = 0; i < comb_struct.k; i++)
+		nb_internal += comb_struct.combination[i] < (NB_PR - NB_SH) ? 1 : 0;
+
+	while (!attack_ni && !attack_sni && c < nb) {
         c++;
 
         if (check_sni) {
