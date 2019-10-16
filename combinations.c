@@ -149,23 +149,3 @@ void unrank(uint64_t rank, struct comb_t comb_struct)
     }
 
 }
-
-//void main() {
-//    int32_t i;
-//    uint64_t j;
-//    int c = 0;
-//    uint64_t k = 5;
-//    uint64_t n = 8;
-//    uint64_t comb[8] = {0};
-//    init_combination(comb, k, n);
-//
-//    print_combination(comb, k);
-//    i = next_combination(comb, k, n);
-//    while (i != -1) {
-//        print_combination(comb, k);
-//        i = next_combination(comb, k, n);
-//        c++;
-//    }
-//    printf("c = %d\n", c);
-//
-//}
