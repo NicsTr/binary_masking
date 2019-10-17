@@ -18,7 +18,7 @@ def is_share_better(x1_s, x2_s):
     return apply_mask(x1_s, x2_s) == x1_s
 
 
-def check_redundant(M, Mb, mask_r, mask_s, d):
+def check(M, Mb, mask_r, mask_s, d):
     """
     For given matrices `M` and `Mb` containing the probe description before
     and after filtering out probes for a single output share, for given masks
@@ -50,7 +50,6 @@ def check_redundant(M, Mb, mask_r, mask_s, d):
             res[i][x2_r_str].append(x2_s)
 
     for i in range(d):
-        print(i)
         res1 = dict()
         size1 = M.nrows()
         for j in itertools.combinations(range(size1), i):
@@ -80,21 +79,15 @@ def check_redundant(M, Mb, mask_r, mask_s, d):
     return True
 
 
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        filename = sys.argv[1]
-    else:
-        filename = raw_input("Filename: ")
-
+def gen_matrices_and_masks(filename):
     masks_all = []
     matrices_all = []
+    probes_todel = []
     with open(filename, 'r') as f:
         line = f.readline()[:-1]
-        d = -1
         while line:
             # Constructs needed structure for each output share
             line = line.split(" ")
-            d += 1
             l = len(line)
             mask_r = []
             mask_s = []
@@ -112,21 +105,47 @@ if __name__ == "__main__":
             to_del = []
             # Filtering out probes
             for i in range(len(line)):
-                s1 = line[:i+1]
-                if not ''.join(s1).count('s') % 2:
+                s1 = ' '.join(line[:i+1])
+                # HERE IS the criterion to filter out probes
+                if not s1.count('s') % 2 and i+1 < len(line) and 's' in line[i + 1]:
                     to_del.append(i)
-                    print(s1)
+                    probes_todel.append(s1)
+
             Mb = Mb.delete_rows(to_del)
             line = f.readline()[:-1]
             matrices_all.append((M, Mb))
 
-        is_ok = True
-        for (M, Mb), (mask_r, mask_s) in zip(matrices_all, masks_all):
-            is_ok &= check_redundant(M, Mb, mask_r, mask_s, d)
-            if not is_ok:
-                break
+    return matrices_all, masks_all, probes_todel 
 
-        if is_ok:
-            print("You can delete those redundant probes!")
-        else:
-            print("/!\\ Something went wrong /!\\")
+
+def check_file(filename):
+
+    matrices_all, masks_all, probes_todel = gen_matrices_and_masks(filename)
+    print("Checking that filtering out the following probes won't affect the"
+            " correctness of the verification:")
+
+    for p in probes_todel:
+        print(p)
+
+    is_ok = True
+    for (M, Mb), (mask_r, mask_s) in zip(matrices_all, masks_all):
+        print(".")
+        d = len(matrices_all) - 1
+        is_ok &= check(M, Mb, mask_r, mask_s, d)
+        if not is_ok:
+            break
+
+    if is_ok:
+        print("You can delete those redundant probes!")
+    else:
+        print("/!\\ Something went wrong /!\\")
+
+    return is_ok
+
+if __name__ == "__main__":
+    if len(sys.argv) == 2:
+        filename = sys.argv[1]
+    else:
+        filename = raw_input("Filename: ")
+
+    check_file(filename)
