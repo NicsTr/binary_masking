@@ -1,4 +1,7 @@
 import sys
+os.system('sage --preparse check_redundant.sage')
+os.system('mv check_redundant.sage.py check_redundant.py')
+import check_redundant
 
 def pi_sh_to_c(pi_sh):
     """
@@ -154,6 +157,7 @@ if __name__ == "__main__":
     base_dir = "./private_multiplication/"
     load_attach_path(base_dir)
     load(base_dir + "tools.sage")
+    hexnums = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     
     if len(sys.argv) == 2:
         filename = sys.argv[1]
@@ -169,15 +173,20 @@ if __name__ == "__main__":
     print("Correct" if test_correctness(desc) else "ERROR")
     probes_desc = (d, probes_r, probes_sh, probes_expl) = get_probes(desc)
     
-    
     # Exclude redundant probes
     print("Section 5.5 describes a way to filter out some probes.")
+    ans = raw_input("Do you want to check if the filter of Section 5.5 is"
+            " correct for your scheme? (y/n)")
+    if 'y' in ans or 'Y' in ans:
+        check_redundant.check_file(filename)
+
     ans = raw_input("Do you want to do so (in the exact same way)? (y/n)")
     if 'y' in ans or 'Y' in ans:
         pos_to_keep= []
+        _, _, probes_todel = check_redundant.gen_matrices_and_masks(filename)
+
         for i in range(len(probes_expl)):
-            s1 = probes_expl[i].split(" - ")[0]
-            if s1.count('s') % 2:
+            if probes_expl[i].split(" - ")[0] not in probes_todel:
                 pos_to_keep.append(i)
 
         probes_r = probes_r.matrix_from_columns(pos_to_keep)
@@ -197,7 +206,6 @@ if __name__ == "__main__":
     
     
     # Regroup external probes at the end
-    hexnums = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     to_move = []
     for i in range(d + 1):
         index = None
@@ -278,3 +286,5 @@ if __name__ == "__main__":
             f.write("\n\n")
     
         f.write("#endif /* PROBES_DESC_H */")
+
+    print("C description generated!")
