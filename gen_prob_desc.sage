@@ -197,9 +197,11 @@ if __name__ == "__main__":
     
     
     # Regroup external probes at the end
+    hexnums = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     to_move = []
     for i in range(d + 1):
-        ci = "c{}".format(i)
+        index = None
+        ci = 'c' + hexnums[i]
         m = -1
         for j in range(len(probes_expl)):
             p = probes_expl[j]
@@ -211,7 +213,7 @@ if __name__ == "__main__":
     probes_r = block_matrix([[probes_r.matrix_from_columns([i for i in range(probes_r.ncols()) if (i
         not in to_move)]), probes_r.matrix_from_columns(to_move)]])
     probes_sh = [probes_sh[i] for i in range(len(probes_sh)) if i not in to_move] + [probes_sh[i] for i in to_move]
-    
+    probes_expl = [probes_expl[i] for i in range(len(probes_expl)) if i not in to_move] + [probes_expl[i] for i in to_move]
     
     nb_sh = len(probes_sh[0].rows()[0])
     nb_r = len(probes_r.columns()[0])
