@@ -197,7 +197,7 @@ if __name__ == "__main__":
     # Exclude probes with only random values
     pos_to_keep = []
     for i in range(len(probes_sh)):
-        if probes_sh[i] != 0:
+        if probes_sh[i] != 0 or probes_r.transpose()[i].hamming_weight() != 1:
             pos_to_keep.append(i)
     
     probes_r = probes_r.matrix_from_columns(pos_to_keep)
