@@ -162,7 +162,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         filename = sys.argv[1]
     else:
-        filename = raw_input("Filename: ")
+        filename = input("Filename: ")
     
     
     with open(filename, "r") as f:
@@ -175,12 +175,12 @@ if __name__ == "__main__":
     
     # Exclude redundant probes
     print("Section 5.5 describes a way to filter out some probes.")
-    ans = raw_input("Do you want to check if the filter of Section 5.5 is"
+    ans = input("Do you want to check if the filter of Section 5.5 is"
             " correct for your scheme? (y/n)")
     if 'y' in ans or 'Y' in ans:
         check_redundant.check_file(filename)
 
-    ans = raw_input("Do you want to do so (in the exact same way)? (y/n)")
+    ans = input("Do you want to do so (in the exact same way)? (y/n)")
     if 'y' in ans or 'Y' in ans:
         pos_to_keep= []
         _, _, probes_todel = check_redundant.gen_matrices_and_masks(filename)

@@ -14,6 +14,7 @@ if __name__ == "__main__":
 
     n = 0
     for i in range(1, d + 1):
+        print(i, log(ncr(nb_pr, i), 2))
         n += ncr(nb_pr, i)
 
     print("Number of sets to check: {} ({})".format(n, log(n,2)))

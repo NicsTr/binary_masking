@@ -146,6 +146,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         filename = sys.argv[1]
     else:
-        filename = raw_input("Filename: ")
+        filename = input("Filename: ")
 
     check_file(filename)
