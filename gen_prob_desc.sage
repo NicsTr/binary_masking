@@ -154,9 +154,6 @@ def probes_r_to_c(probes_r):
 
 if __name__ == "__main__":
     # Load the tools
-    base_dir = "./private_multiplication/"
-    load_attach_path(base_dir)
-    load(base_dir + "tools.sage")
     hexnums = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     
     if len(sys.argv) == 2:
@@ -168,30 +165,47 @@ if __name__ == "__main__":
     with open(filename, "r") as f:
         txt_desc = f.read()
     
-    # Check correctness + generate internal representations
-    desc = get_desc(txt_desc)
-    print("Correct" if test_correctness(desc) else "ERROR")
-    probes_desc = (d, probes_r, probes_sh, probes_expl) = get_probes(desc)
-    
-    # Exclude redundant probes
-    print("Section 5.5 describes a way to filter out some probes.")
-    ans = raw_input("Do you want to check if the filter of Section 5.5 is"
-            " correct for your scheme? (y/n)")
+
+    ans = input("Take glitches into account? (y/n)")
+
     if 'y' in ans or 'Y' in ans:
-        check_redundant.check_file(filename)
+        base_dir = "./"
+        load_attach_path(base_dir)
+        load(base_dir + "glitch_parser.sage")
+        desc = txt_desc
 
-    ans = raw_input("Do you want to do so (in the exact same way)? (y/n)")
-    if 'y' in ans or 'Y' in ans:
-        pos_to_keep= []
-        _, _, probes_todel = check_redundant.gen_matrices_and_masks(filename)
+        probes_desc = (d, probes_r, probes_sh, probes_expl) = get_probes(desc)
 
-        for i in range(len(probes_expl)):
-            if probes_expl[i].split(" - ")[0] not in probes_todel:
-                pos_to_keep.append(i)
+    else:
+        base_dir = "./private_multiplication/"
+        load_attach_path(base_dir)
+        load(base_dir + "tools.sage")
 
-        probes_r = probes_r.matrix_from_columns(pos_to_keep)
-        probes_sh = [probes_sh[i] for i in pos_to_keep]
-        probes_expl = [probes_expl[i] for i in pos_to_keep]
+        # Check correctness + generate internal representations
+        desc = get_desc(txt_desc)
+        print("Correct" if test_correctness(desc) else "ERROR")
+
+        probes_desc = (d, probes_r, probes_sh, probes_expl) = get_probes(desc)
+
+        # Exclude redundant probes
+        print("Section 5.5 describes a way to filter out some probes.")
+        ans = input("Do you want to check if the filter of Section 5.5 is"
+                " correct for your scheme? (y/n)")
+        if 'y' in ans or 'Y' in ans:
+            check_redundant.check_file(filename)
+
+        ans = input("Do you want to do so (in the exact same way)? (y/n)")
+        if 'y' in ans or 'Y' in ans:
+            pos_to_keep= []
+            _, _, probes_todel = check_redundant.gen_matrices_and_masks(filename)
+
+            for i in range(len(probes_expl)):
+                if probes_expl[i].split(" - ")[0] not in probes_todel:
+                    pos_to_keep.append(i)
+
+            probes_r = probes_r.matrix_from_columns(pos_to_keep)
+            probes_sh = [probes_sh[i] for i in pos_to_keep]
+            probes_expl = [probes_expl[i] for i in pos_to_keep]
 
     
     # Exclude probes with only random values
