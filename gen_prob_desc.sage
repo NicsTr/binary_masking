@@ -216,7 +216,8 @@ if __name__ == "__main__":
             if ci in p and len(p) > m:
                 m = len(p)
                 index = j
-        to_move.append(index)
+        if index is not None:
+            to_move.append(index)
     
     probes_r = block_matrix([[probes_r.matrix_from_columns([i for i in range(probes_r.ncols()) if (i
         not in to_move)]), probes_r.matrix_from_columns(to_move)]])
