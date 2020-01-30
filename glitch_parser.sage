@@ -64,7 +64,8 @@ def get_probes(txtr_desc):
             for p in powerset([before_part] + part):
                 if not p:
                     continue
-                new_p = ' '.join(p).strip()
+                # Remove unwanted spaces
+                new_p = ' '.join((' '.join(p).split())) 
                 if len(new_p.split(' ')) < 2:
                     continue
                 suffix = " - in c{}".format(hexnums[nshare])
