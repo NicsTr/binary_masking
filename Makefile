@@ -23,7 +23,7 @@ binverif.o: binverif.c checker_helper.o prob_desc.o checker.o combinations.o
 .PHONY: clean all
 
 clean:
-	rm -f $(OBJS) binverif *.sage.py
+	rm -f $(OBJS) binverif *.sage.py parser.out parsetab.py
 
 all: binverif
 
