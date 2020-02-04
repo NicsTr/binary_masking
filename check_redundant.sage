@@ -84,10 +84,12 @@ def gen_matrices_and_masks(filename):
     matrices_all = []
     probes_todel = []
     with open(filename, 'r') as f:
-        line = f.readline()[:-1]
-        while line:
+        txt_desc = f.read().split('\n')
+        for line in txt_desc:
+            if not line or "ORDER" in line or "MASKS" in line:
+                continue
             # Constructs needed structure for each output share
-            line = line.split(" ")
+            line = line.replace('|', '').split()
             l = len(line)
             mask_r = []
             mask_s = []
@@ -95,7 +97,7 @@ def gen_matrices_and_masks(filename):
                 if 'r' in i:
                     mask_r.append(1)
                     mask_s.append(0)
-                else:
+                elif 's' in i:
                     mask_r.append(0)
                     mask_s.append(1)
             masks_all.append((mask_r, mask_s))
@@ -142,10 +144,3 @@ def check_file(filename):
 
     return is_ok
 
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        filename = sys.argv[1]
-    else:
-        filename = raw_input("Filename: ")
-
-    check_file(filename)
