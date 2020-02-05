@@ -102,6 +102,7 @@ def gen_matrices_and_masks(filename):
                 elif 's' in i:
                     mask_r.append(0)
                     mask_s.append(1)
+
             masks_all.append((mask_r, mask_s))
 
             M = matrix.toeplitz([1]*l, [0]*(l-1), GF(2))
