@@ -201,9 +201,10 @@ if __name__ == "__main__":
         parser = MyParser(d, names_r, glitch)
 
     all_probes = []
-    external_probes_count = 0
+    nb_internal = 0
 
     for l in txt_desc[2:]:
+        l = l.strip()
         if not l:
             continue
         res = parser.parse(l)[2]
@@ -212,12 +213,12 @@ if __name__ == "__main__":
         for probe_r, probe_sh, probe_expl in res:
             if probe_expl == l:
                 all_probes.append((probe_r, probe_sh, probe_expl))
-                external_probes_count += 1
 
         # Ensure uniqueness of probe expression
         for probe_r, probe_sh, probe_expl in res:
             if any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
                 continue
+            nb_internal += 1
             all_probes.insert(0, (probe_r, probe_sh, probe_expl))
 
     (probes_r, probes_sh, probes_expl) = list(zip(*all_probes))
@@ -316,6 +317,7 @@ if __name__ == "__main__":
         f.write("#define NB_PR {}\n".format(len(probes_sh)))
         f.write("#define NB_R {}\n".format(nb_r))
         f.write("#define D {}\n".format(d))
+        f.write("#define NB_INT {}\n".format(nb_internal))
         if not vect:
             f.write("#define SIZE_SH {}\n".format(nb_sh // 64 + 1))
             f.write("#define SIZE_R {}\n".format(nb_r // 64 + 1))
