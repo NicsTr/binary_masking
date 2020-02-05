@@ -93,7 +93,7 @@ def MyParser(d, names_r, glitch=False):
 
     def p_expr_paren(t):
         'expr : LPAREN expr RPAREN'
-        t[0] = [t[2][0], '( ' + t[2][1] + ' )', t[2][2]]
+        t[0] = [t[2][0], '(' + t[2][1] + ')', t[2][2]]
 
     def p_expr_xor(t):
         'expr : expr SPACE expr'
@@ -145,11 +145,16 @@ def MyParser(d, names_r, glitch=False):
         new_p[1].set_immutable()
         s.add(new_p)
 
-        probe_expl = t[1][1] + ' |'
+        if t[2] == '|':
+            probe_expl = t[1][1] + '|'
+        else:
+            probe_expl = t[1][1] + ' |'
         t[0] = [s, probe_expl, t[1][2]]
 
     
     def p_error(p):
+        if p is None:
+            ValueError("Unexpected EOL, check your last char")
         raise ValueError("Wrong Token " + p.type) 
 
 
