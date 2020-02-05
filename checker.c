@@ -42,7 +42,7 @@ int check_full(int check_sni)
         init_r_curr(&probes_r_curr, comb, k);
 
         c = 0;
-        nb_internal = k  > (NB_PR - NB_SH) ? (NB_PR - NB_SH) : k; // all starting probes are internal, except in the very odd case where there's so few of them
+        nb_internal = k  > NB_INT ? NB_INT : k; // all starting probes are internal, except in the very odd case where there's so few of them
         while (!attack_ni && !attack_sni) {
             c++;
             if (!(c % 100000000)) {
@@ -59,8 +59,8 @@ int check_full(int check_sni)
 
             // Adjust the number of internal probes
             if (check_sni) {
-                if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
-                if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
+                if (comb_diff.to_del < NB_INT) nb_internal--;
+                if (comb_diff.to_add < NB_INT) nb_internal++;
             }
 
             probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[comb_diff.to_del]);
@@ -113,7 +113,7 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
     c = 0;
 	nb_internal = 0;
 	for (uint64_t i = 0; i < comb_struct.k; i++)
-		nb_internal += comb_struct.combination[i] < (NB_PR - NB_SH) ? 1 : 0;
+		nb_internal += comb_struct.combination[i] < NB_INT ? 1 : 0;
 
     while (!attack_ni && !attack_sni && c < nb) {
         c++;
@@ -128,8 +128,8 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
 
         // Adjust the number of internal probes
         if (check_sni) {
-            if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
-            if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
+            if (comb_diff.to_del < NB_INT) nb_internal--;
+            if (comb_diff.to_add < NB_INT) nb_internal++;
         }
 
         probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[comb_diff.to_del]);
@@ -186,7 +186,7 @@ int check_full(int check_sni)
         init_r_curr(probes_r_curr, comb, k);
 
         c = 0;
-        nb_internal = k  > (NB_PR - NB_SH) ? (NB_PR - NB_SH) : k;
+        nb_internal = k  > NB_INT ? NB_INT : k;
         while (!attack_ni && !attack_sni) {
             c++;
             if (!(c % 100000000)) {
@@ -203,8 +203,8 @@ int check_full(int check_sni)
 
             // Adjust the number of internal probes
             if (check_sni) {
-                if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
-                if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
+                if (comb_diff.to_del < NB_INT) nb_internal--;
+                if (comb_diff.to_add < NB_INT) nb_internal++;
             }
 
             probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_del]);
@@ -255,7 +255,7 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
     c = 0;
 	nb_internal = 0;
 	for (uint64_t i = 0; i < comb_struct.k; i++)
-		nb_internal += comb_struct.combination[i] < (NB_PR - NB_SH) ? 1 : 0;
+		nb_internal += comb_struct.combination[i] < NB_INT ? 1 : 0;
 
 	while (!attack_ni && !attack_sni && c < nb) {
         c++;
@@ -270,8 +270,8 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
 
         // Adjust the number of internal probes
         if (check_sni) {
-            if (comb_diff.to_del < NB_PR - NB_SH) nb_internal--;
-            if (comb_diff.to_add < NB_PR - NB_SH) nb_internal++;
+            if (comb_diff.to_del < NB_INT) nb_internal--;
+            if (comb_diff.to_add < NB_INT) nb_internal++;
         }
 
         probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_del]);
