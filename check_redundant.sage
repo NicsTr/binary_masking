@@ -66,6 +66,8 @@ def check(M, Mb, mask_r, mask_s, d):
 
             found = False
             for j in range(i, -1, -1):
+                if x1_r_str not in res[j]:
+                    continue
                 for x2_s in res[j][x1_r_str]:
                     if is_share_better(x1_s, x2_s):
                         found = True
