@@ -201,7 +201,7 @@ if __name__ == "__main__":
         parser = MyParser(d, names_r, glitch)
 
     all_probes = []
-    nb_internal = 0
+    nb_external = 0
 
     for l in txt_desc[2:]:
         l = l.strip()
@@ -212,13 +212,13 @@ if __name__ == "__main__":
         # Ensure that external probes are taken and at the end
         for probe_r, probe_sh, probe_expl in res:
             if probe_expl == l:
+                nb_external += 1
                 all_probes.append((probe_r, probe_sh, probe_expl))
 
         # Ensure uniqueness of probe expression
         for probe_r, probe_sh, probe_expl in res:
             if any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
                 continue
-            nb_internal += 1
             all_probes.insert(0, (probe_r, probe_sh, probe_expl))
 
     (probes_r, probes_sh, probes_expl) = list(zip(*all_probes))
@@ -283,6 +283,7 @@ if __name__ == "__main__":
     nb_sh = len(probes_sh[0].rows()[0])
     nb_r = len(probes_r.columns()[0])
     vect = False
+    nb_internal = len(probes_sh) - nb_external
     if nb_sh <= 16 and nb_r <= 64:
         vect = True
 
