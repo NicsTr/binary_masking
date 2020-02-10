@@ -17,9 +17,9 @@ NI and SNI schemes. Due to historical reasons, those
 schemes are named according to the _number of shares_, which is one more than
 their security order.
 
-Glitch-resistant schemes introduced by Gross et. al. in their paper (available
+Glitch-resistant schemes introduced by Gross et al. in their paper (available
 at [Eprint 2016/286](https://eprint.iacr.org/2016/486.pdf)) can be found in
-[`DOM-indep](/schemes/DOM-indep).
+[`DOM-indep`](/schemes/DOM-indep).
 
 A _d_-NI scheme can be generated for any _d_ using `gen_sch.py`.
 
