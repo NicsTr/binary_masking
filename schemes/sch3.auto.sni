@@ -1,3 +1,5 @@
+ORDER = 2
+MASKS = [r00, r01, r02]
 s00 r00 s01 s10 r01
 s11 r01 s12 s21 r02
 s22 r02 s20 s02 r00
