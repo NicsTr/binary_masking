@@ -1,2 +1,4 @@
+ORDER = 1
+MASKS = [r00, r01]
 s00 r00 s01 s10 r01
 s11 r01 r00

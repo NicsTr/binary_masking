@@ -1,0 +1,11 @@
+ORDER = 7
+MASKS = [r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, ra, rb, rc, rd, re, rf, rg, rh, ri, rj, rk, rl, rm, rn, ro, rp, rq, rr]
+
+ s00      (s01 r0|) (s02 r1|) (s03 r3|) (s04 r6|) (s05 ra|) (s06 rf|) (s07 rl|)
+(s10 r0|)  s11      (s12 r2|) (s13 r4|) (s14 r7|) (s15 rb|) (s16 rg|) (s17 rm|)
+(s20 r1|) (s21 r2|)  s22      (s23 r5|) (s24 r8|) (s25 rc|) (s26 rh|) (s27 rn|)
+(s30 r3|) (s31 r4|) (s32 r5|)  s33      (s34 r9|) (s35 rd|) (s36 ri|) (s37 ro|)
+(s40 r6|) (s41 r7|) (s42 r8|) (s43 r9|)  s44      (s45 re|) (s46 rj|) (s47 rp|)
+(s50 ra|) (s51 rb|) (s52 rc|) (s53 rd|) (s54 re|)  s55      (s56 rk|) (s57 rq|)
+(s60 rf|) (s61 rg|) (s62 rh|) (s63 ri|) (s64 rj|) (s65 rk|)  s66      (s67 rr|)
+(s70 rl|) (s71 rm|) (s72 rn|) (s73 ro|) (s74 rp|) (s75 rq|) (s76 rr|)  s77

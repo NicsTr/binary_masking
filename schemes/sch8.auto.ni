@@ -1,3 +1,5 @@
+ORDER = 7
+MASKS = [r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13, r14, r15]
 s00 r00 s01 s10 r01 s02 s20 r08 s03 s30 r09 s04 s40
 s11 r01 s12 s21 r02 s13 s31 r09 s14 s41 r10 s15 s51
 s22 r02 s23 s32 r03 s24 s42 r10 s25 s52 r11 s26 s62
