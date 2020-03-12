@@ -102,9 +102,6 @@ int main(int argc, char **argv)
     }
 
 
-    if (nb_thr == 1)
-        return check_full(check_sni);
-
 
     /* Parallelization */
 
