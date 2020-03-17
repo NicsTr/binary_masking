@@ -166,6 +166,34 @@ def probes_r_to_c(probes_r):
     return code
 
 
+def radices_to_c(radices):
+    """
+    Convert the radices description into the corresponding C array.
+    """
+    n = len(radices)
+    code = []
+    code.append("uint8_t radices[{}]".format(n))
+    arr = ''
+    arr += " { "
+    arr += ", ".join([str(radix) for radix in radices])
+    arr += " };"
+    code.append(arr)
+    return code
+
+
+def update_radices(radices, probe_expl):
+    if probe_expl not in radices:
+        radices[probe_expl] = 0
+    radices[probe_expl] += 1
+
+
+def sorted_radices_array(radices, probes_expl):
+    res = []
+    for probe_expl in probes_expl:
+        res.append(radices[probe_expl])
+    return res
+
+
 if __name__ == "__main__":
     # Load the tools
     hexnums = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -195,12 +223,13 @@ if __name__ == "__main__":
     ans = input("Take glitches into account? (y/n)")
     if 'y' in ans or 'Y' in ans:
         glitch = True
-        parser = MyParser(d, names_r, glitch)
     else:
         glitch = False
-        parser = MyParser(d, names_r, glitch)
+
+    parser = MyParser(d, names_r, glitch)
 
     all_probes = []
+    radices = {}
     nb_external = 0
 
     for l in txt_desc[2:]:
@@ -214,12 +243,14 @@ if __name__ == "__main__":
             if probe_expl == l:
                 nb_external += 1
                 all_probes.append((probe_r, probe_sh, probe_expl))
+                update_radices(radices, probe_expl)
 
         # Ensure uniqueness of probe expression
         for probe_r, probe_sh, probe_expl in res:
             if any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
                 continue
             all_probes.insert(0, (probe_r, probe_sh, probe_expl))
+            update_radices(radices, probe_expl)
 
     (probes_r, probes_sh, probes_expl) = list(zip(*all_probes))
     probes_r = matrix(probes_r).transpose()
@@ -232,7 +263,7 @@ if __name__ == "__main__":
 
         print("Section 5.5 describes a way to filter out some probes.")
         ans = input("Do you want to check if the filter of Section 5.5 is"
-                    " correct for your scheme? (y/n)")
+                " correct for your scheme? (y/n)")
         if 'y' in ans or 'Y' in ans:
             check_file(filename)
 
@@ -250,36 +281,7 @@ if __name__ == "__main__":
             probes_sh = [probes_sh[i] for i in pos_to_keep]
             probes_expl = [probes_expl[i] for i in pos_to_keep]
 
-
-#    # Exclude probes with only random values
-#    pos_to_keep = []
-#    for i in range(len(probes_sh)):
-#        if probes_sh[i] != 0 or probes_r.transpose()[i].hamming_weight() != 1:
-#            pos_to_keep.append(i)
-#
-#    probes_r = probes_r.matrix_from_columns(pos_to_keep)
-#    probes_sh = [probes_sh[i] for i in pos_to_keep]
-#    probes_expl = [probes_expl[i] for i in pos_to_keep]
-
-
-#    # Regroup external probes at the end
-#    to_move = []
-#    for i in range(d + 1):
-#        index = None
-#        ci = 'c' + hexnums[i]
-#        m = -1
-#        for j in range(len(probes_expl)):
-#            p = probes_expl[j]
-#            if ci in p and len(p) > m:
-#                m = len(p)
-#                index = j
-#        to_move.append(index)
-#
-#    probes_r = block_matrix([[probes_r.matrix_from_columns([i for i in range(probes_r.ncols()) if (i
-#        not in to_move)]), probes_r.matrix_from_columns(to_move)]])
-#    probes_sh = [probes_sh[i] for i in range(len(probes_sh)) if i not in to_move] + [probes_sh[i] for i in to_move]
-#    probes_expl = [probes_expl[i] for i in range(len(probes_expl)) if i not in to_move] + [probes_expl[i] for i in to_move]
-
+    radices = sorted_radices_array(radices, probes_expl)
     nb_sh = len(probes_sh[0].rows()[0])
     nb_r = len(probes_r.columns()[0])
     vect = False
@@ -310,6 +312,9 @@ if __name__ == "__main__":
             f.write("\n\n")
             f.write(" = ".join(probes_sh_to_c(probes_sh, probes_expl)[2:]))
 
+        f.write("\n\n")
+        f.write(" = ".join(radices_to_c(radices)))
+
     # Write output probes description header
     with open("prob_desc.h", "w") as f:
         f.write("#ifndef PROBES_DESC_H\n")
@@ -324,6 +329,10 @@ if __name__ == "__main__":
             f.write("#define SIZE_R {}\n".format(nb_r // 64 + 1))
         else:
             f.write("#define VECT")
+
+        if glitch:
+            f.write("#define GLITCH")
+
         f.write("\n")
         f.write("/* Probe description for {} */".format(filename))
         f.write("\n\n")
@@ -335,14 +344,17 @@ if __name__ == "__main__":
             f.write(probes_sh_to_c_vect(probes_sh, probes_expl)[0] + ';')
             f.write("\n")
             f.write(probes_sh_to_c_vect(probes_sh, probes_expl)[2] + ';')
-            f.write("\n\n")
         else:
             f.write(probes_r_to_c(probes_r)[0] + ';')
             f.write("\n")
             f.write(probes_sh_to_c(probes_sh, probes_expl)[0] + ';')
             f.write("\n")
             f.write(probes_sh_to_c(probes_sh, probes_expl)[2] + ';')
-            f.write("\n\n")
+
+        f.write("\n")
+        f.write(radices_to_c(radices)[0] + ';')
+
+        f.write("\n\n")
 
         f.write("#endif /* PROBES_DESC_H */")
 
