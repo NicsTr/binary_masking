@@ -1,28 +1,38 @@
 #include <immintrin.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "checker.h"
 #include "prob_desc.h"
 
 #ifdef VECT
 #include "popcount256_16.h"
+#include <stdio.h>
 
-void init_sh_all(__m256i probes_a_all[NB_PR], __m256i probes_b_all[NB_PR])
+void init_sh_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR])
 {
-    uint64_t i;
+    uint64_t i, j;
+    uint64_t c = 0;
+
     for (i = 0; i < NB_PR; i++) {
-        probes_a_all[i] = _mm256_loadu_si256((__m256i*)(probes_sh_a[i]));
-        probes_b_all[i] = _mm256_loadu_si256((__m256i*)(probes_sh_b[i]));
+        probes_a_all[i] = aligned_alloc(32, radices[i]*sizeof(__m256i));
+        probes_b_all[i] = aligned_alloc(32, radices[i]*sizeof(__m256i));
+        for (j = 0; j < radices[i]; j++) {
+            probes_a_all[i][j] = _mm256_loadu_si256((__m256i*)(probes_sh_a[c]));
+            probes_b_all[i][j] = _mm256_loadu_si256((__m256i*)(probes_sh_b[c]));
+            c++;
+        }
     }
+
 }
 
-void init_sh_curr(__m256i *probes_sh_curr, __m256i probes_sh_all[NB_PR],
+void init_sh_curr(__m256i *probes_sh_curr, __m256i *probes_sh_all[NB_PR],
         uint64_t *combination, uint64_t k)
 {
     *probes_sh_curr = _mm256_setzero_si256();
     uint64_t i, j;
     for (i = 0; i < k; i++) {
         j = combination[i];
-        *probes_sh_curr = _mm256_xor_si256(*probes_sh_curr, probes_sh_all[j]);
+        *probes_sh_curr = _mm256_xor_si256(*probes_sh_curr, probes_sh_all[j][0]);
     }
 }
 
@@ -36,6 +46,14 @@ void init_r_curr(uint64_t *probes_r_curr, uint64_t *combination, uint64_t k)
     }
 }
 
+void free_sh_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR])
+{
+    uint64_t i;
+    for (i = 0; i < NB_PR; i++) {
+        free(probes_a_all[i]);
+        free(probes_b_all[i]);
+    }
+}
 
 int check_attack_ni(uint64_t nb_probes, uint64_t r_sum, __m256i sh_sum_a,
         __m256i sh_sum_b)
