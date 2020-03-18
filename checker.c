@@ -11,8 +11,8 @@
 #ifdef VECT
 
 int check_support(const int k, const int nb_internal, __m256i probes_a_curr,
-       __m256i probes_b_curr, uint64_t probes_r_curr, __m256i *probes_a_all,
-       __m256i *probes_b_all, int check_sni)
+       __m256i probes_b_curr, uint64_t probes_r_curr, __m256i **probes_a_all,
+       __m256i **probes_b_all, int check_sni)
 {
     if (check_sni) {
         return check_attack_sni(k, nb_internal, probes_r_curr, probes_a_curr, probes_b_curr);
@@ -24,7 +24,7 @@ int check_support(const int k, const int nb_internal, __m256i probes_a_curr,
 
 int next_support(struct comb_t *comb_struct, struct comb_diff_t *comb_diff,
         __m256i *probes_a_curr, __m256i *probes_b_curr, uint64_t *probes_r_curr,
-        __m256i *probes_a_all,  __m256i *probes_b_all,
+        __m256i **probes_a_all,  __m256i **probes_b_all,
         uint64_t *nb_internal, int check_sni)
 {
         next_combination(comb_struct, comb_diff);
@@ -36,11 +36,11 @@ int next_support(struct comb_t *comb_struct, struct comb_diff_t *comb_diff,
             if (comb_diff->to_add < NB_INT) nb_internal++;
         }
 
-        *probes_a_curr = _mm256_xor_si256(*probes_a_curr, probes_a_all[comb_diff->to_del]);
-        *probes_a_curr = _mm256_xor_si256(*probes_a_curr, probes_a_all[comb_diff->to_add]);
+        *probes_a_curr = _mm256_xor_si256(*probes_a_curr, probes_a_all[comb_diff->to_del][0]);
+        *probes_a_curr = _mm256_xor_si256(*probes_a_curr, probes_a_all[comb_diff->to_add][0]);
 
-        *probes_b_curr = _mm256_xor_si256(*probes_b_curr, probes_b_all[comb_diff->to_del]);
-        *probes_b_curr = _mm256_xor_si256(*probes_b_curr, probes_b_all[comb_diff->to_add]);
+        *probes_b_curr = _mm256_xor_si256(*probes_b_curr, probes_b_all[comb_diff->to_del][0]);
+        *probes_b_curr = _mm256_xor_si256(*probes_b_curr, probes_b_all[comb_diff->to_add][0]);
 
         *probes_r_curr ^= probes_r[comb_diff->to_del] ^ probes_r[comb_diff->to_add];
 
@@ -56,8 +56,8 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
     uint64_t c = 0;
     __m256i probes_a_curr;
     __m256i probes_b_curr;
-    __m256i probes_a_all[NB_PR];
-    __m256i probes_b_all[NB_PR];
+    __m256i *probes_a_all[NB_PR];
+    __m256i *probes_b_all[NB_PR];
     init_sh_all(probes_a_all, probes_b_all);
 
     init_sh_curr(&probes_a_curr, probes_a_all, comb_struct.combination, comb_struct.k);
@@ -83,6 +83,7 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
         }
     }
 
+    free_sh_all(probes_a_all, probes_b_all);
     if (attack) {
         printf("\n");
         print_combination(comb_struct);

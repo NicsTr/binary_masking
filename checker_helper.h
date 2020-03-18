@@ -4,10 +4,11 @@
 
 #ifdef VECT
 
-void init_sh_all(__m256i probes_a_all[NB_PR], __m256i probes_b_all[NB_PR]);
-void init_sh_curr(__m256i *probes_sh_curr, __m256i probes_sh_all[NB_PR],
+void init_sh_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR]);
+void init_sh_curr(__m256i *probes_sh_curr, __m256i *probes_sh_all[NB_PR],
         uint64_t *combination, uint64_t k);
 void init_r_curr(uint64_t *probes_r_curr, uint64_t *combination, uint64_t k);
+void free_sh_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR]);
 int check_attack_ni(uint64_t nb_probes, uint64_t r_sum, __m256i sh_sum_a,
         __m256i sh_sum_b);
 int check_attack_sni(uint64_t nb_probes, uint64_t nb_internal, uint64_t r_sum,
