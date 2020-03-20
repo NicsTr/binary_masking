@@ -181,17 +181,36 @@ def radices_to_c(radices):
     return code
 
 
-def update_radices(radices, probe_expl):
-    if probe_expl not in radices:
-        radices[probe_expl] = 0
-    radices[probe_expl] += 1
+def sort_all_probes(all_probes):
+    """
+    all_probes = (probes_r, probes_sh, probes_expl)
+    """
+    new_all_probes = []
+    while all_probes:
+        pex = all_probes[0][2]
+        for i, p in enumerate(all_probes):
+            if p[2] == pex:
+                new_all_probes.append(all_probes.pop(i))
+
+    return new_all_probes
 
 
-def sorted_radices_array(radices, probes_expl):
-    res = []
-    for probe_expl in probes_expl:
-        res.append(radices[probe_expl])
-    return res
+def compute_radices(all_probes):
+    print(len(all_probes))
+    radices = []
+    curr_exp = all_probes[0][2]
+    c = 0
+    for p in all_probes:
+        if p[2] == curr_exp:
+            c += 1
+        else:
+            radices.append(c)
+            c = 1
+            curr_exp = p[2]
+
+    radices.append(c)
+
+    return radices
 
 
 if __name__ == "__main__":
@@ -229,7 +248,6 @@ if __name__ == "__main__":
     parser = MyParser(d, names_r, glitch)
 
     all_probes = []
-    radices = {}
     nb_external = 0
 
     for l in txt_desc[2:]:
@@ -243,17 +261,15 @@ if __name__ == "__main__":
             if probe_expl == l:
                 nb_external += 1
                 all_probes.append((probe_r, probe_sh, probe_expl))
-                update_radices(radices, probe_expl)
 
         # Ensure uniqueness of probe expression
         for probe_r, probe_sh, probe_expl in res:
             if any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
                 continue
             all_probes.insert(0, (probe_r, probe_sh, probe_expl))
-            update_radices(radices, probe_expl)
 
+    all_probes = sort_all_probes(all_probes)
     (probes_r, probes_sh, probes_expl) = list(zip(*all_probes))
-    probes_r = matrix(probes_r).transpose()
 
     if not glitch:
         # Exclude redundant probes
@@ -277,11 +293,14 @@ if __name__ == "__main__":
                 if p not in probes_todel:
                     pos_to_keep.append(i)
 
-            probes_r = probes_r.matrix_from_columns(pos_to_keep)
+            probes_r = [probes_r[i] for i in pos_to_keep]
             probes_sh = [probes_sh[i] for i in pos_to_keep]
             probes_expl = [probes_expl[i] for i in pos_to_keep]
 
-    radices = sorted_radices_array(radices, probes_expl)
+
+    radices = compute_radices(list(zip(probes_r, probes_sh, probes_expl)))
+
+    probes_r = matrix(probes_r).transpose()
     nb_sh = len(probes_sh[0].rows()[0])
     nb_r = len(probes_r.columns()[0])
     vect = False
@@ -320,7 +339,7 @@ if __name__ == "__main__":
         f.write("#ifndef PROBES_DESC_H\n")
         f.write("#define PROBES_DESC_H\n\n")
         f.write("#define NB_SH {}\n".format(nb_sh))
-        f.write("#define NB_PR {}\n".format(len(probes_sh)))
+        f.write("#define NB_PR {}\n".format(len(radices)))
         f.write("#define NB_R {}\n".format(nb_r))
         f.write("#define D {}\n".format(d))
         f.write("#define NB_INT {}\n".format(nb_internal))
@@ -328,12 +347,11 @@ if __name__ == "__main__":
             f.write("#define SIZE_SH {}\n".format(nb_sh // 64 + 1))
             f.write("#define SIZE_R {}\n".format(nb_r // 64 + 1))
         else:
-            f.write("#define VECT")
+            f.write("#define VECT\n")
 
         if glitch:
-            f.write("#define GLITCH")
+            f.write("#define GLITCH\n")
 
-        f.write("\n")
         f.write("/* Probe description for {} */".format(filename))
         f.write("\n\n")
         f.write("char *filename;")
