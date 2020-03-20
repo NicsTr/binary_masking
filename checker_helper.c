@@ -8,7 +8,8 @@
 #include "popcount256_16.h"
 #include <stdio.h>
 
-void init_sh_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR])
+void init_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR],
+        uint64_t *probes_r_all[NB_PR])
 {
     uint64_t i, j;
     uint64_t c = 0;
@@ -16,9 +17,11 @@ void init_sh_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR])
     for (i = 0; i < NB_PR; i++) {
         probes_a_all[i] = aligned_alloc(32, radices[i]*sizeof(__m256i));
         probes_b_all[i] = aligned_alloc(32, radices[i]*sizeof(__m256i));
+        probes_r_all[i] = calloc(radices[i], sizeof(uint64_t));
         for (j = 0; j < radices[i]; j++) {
             probes_a_all[i][j] = _mm256_loadu_si256((__m256i*)(probes_sh_a[c]));
             probes_b_all[i][j] = _mm256_loadu_si256((__m256i*)(probes_sh_b[c]));
+            probes_r_all[i][j] = probes_r[c];
             c++;
         }
     }
@@ -36,22 +39,25 @@ void init_sh_curr(__m256i *probes_sh_curr, __m256i *probes_sh_all[NB_PR],
     }
 }
 
-void init_r_curr(uint64_t *probes_r_curr, uint64_t *combination, uint64_t k)
+void init_r_curr(uint64_t *probes_r_curr, uint64_t *probes_r_all[NB_PR],
+        uint64_t *combination, uint64_t k)
 {
     uint64_t i, j;
     *probes_r_curr = 0;
     for (i = 0; i < k; i++) {
         j = combination[i];
-        *probes_r_curr ^= probes_r[j];
+        *probes_r_curr ^= probes_r_all[j][0];
     }
 }
 
-void free_sh_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR])
+void free_all(__m256i *probes_a_all[NB_PR], __m256i *probes_b_all[NB_PR],
+        uint64_t *probes_r_all[NB_PR])
 {
     uint64_t i;
     for (i = 0; i < NB_PR; i++) {
         free(probes_a_all[i]);
         free(probes_b_all[i]);
+        free(probes_r_all[i]);
     }
 }
 
@@ -164,8 +170,8 @@ void init_sh_curr(uint64_t probes_sh_curr[NB_SH][SIZE_SH],
 
     /* Adding the right probes */
     for (i = 0; i < k; i++) {
-            j = combination[i];
-            probes_sh_xor(probes_sh_curr, probes_sh_all[j]);
+        j = combination[i];
+        probes_sh_xor(probes_sh_curr, probes_sh_all[j]);
     }
 }
 

@@ -104,14 +104,9 @@ def MyParser(d, names_r, glitch=False):
         if glitch:
             s = t[1][0].union(t[3][0])
 
-            for e in powerset(s):
-                if len(e) == 0:
-                    continue
-                probe_r = vector(GF(2), nb_r)
-                probe_sh = matrix(GF(2), d + 1)
-                for l in e:
-                    probe_r += l[0]
-                    probe_sh += l[1]
+            for e in s:
+                probe_r = e[0]
+                probe_sh = e[1]
 
                 probe_r.set_immutable()
                 probe_sh.set_immutable()
