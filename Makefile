@@ -9,12 +9,13 @@ OBJS =  \
  checker_helper.o \
  checker.o \
  binverif.o \
+ gray.o \
  prob_desc.o
 
 binverif: $(OBJS)
 	$(CC) -lpthread -o $@ $(OBJS)
 
-binverif.o: binverif.c checker_helper.o prob_desc.o checker.o combinations.o
+binverif.o: binverif.c checker_helper.o prob_desc.o checker.o combinations.o gray.o
 	$(CC) $(FLAGS) -o $@ -c $<
 
 %.o: %.c %.h prob_desc.h
