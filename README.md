@@ -31,6 +31,11 @@ C description of the scheme that will be verified. To do so you can use
 The output is a pair of files called `prob_desc.c` and `prob_desc.h`
 that contains the information needed before compilation.
 
+The script has one dependency: [`ply`](https://pypi.org/project/ply/). It can be
+installed using `pip` (`pip install ply`) or your favorite package manager.
+It must be accessible by your sage environment (be careful when you sage
+install is not system-wide).
+
 **WARNING: The optimization based on equipotent sets given in
 `gen_prob_desc.sage` doesn't apply to every schemes. Whether or not it can be
 applied to a given scheme can be determined using `check_redundant.sage`**
