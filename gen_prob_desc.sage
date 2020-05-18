@@ -196,7 +196,6 @@ def sort_all_probes(all_probes):
 
 
 def compute_radices(all_probes):
-    print(len(all_probes))
     radices = []
     curr_exp = all_probes[0][2]
     c = 0
@@ -249,25 +248,30 @@ if __name__ == "__main__":
 
     all_probes = []
     nb_external = 0
+    tot_nb_xor = 0
 
     for l in txt_desc[2:]:
         l = l.strip()
         if not l:
             continue
-        res = parser.parse(l)[2]
+        res = parser.parse(l)
+        probes = res[2]
+        tot_nb_xor += res[3]
 
         # Ensure that external probes are taken and at the end
-        for probe_r, probe_sh, probe_expl in res:
-            if probe_expl == l:
+        for probe_r, probe_sh, probe_expl in probes:
+            # .split() can handle multiple whitespaces
+            if probe_expl.split() == l.split():
                 nb_external += 1
                 all_probes.append((probe_r, probe_sh, probe_expl))
 
         # Ensure uniqueness of probe expression
-        for probe_r, probe_sh, probe_expl in res:
+        for probe_r, probe_sh, probe_expl in probes:
             if any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
                 continue
             all_probes.insert(0, (probe_r, probe_sh, probe_expl))
 
+    print("Total number of XOR gates needed: ", tot_nb_xor)
     all_probes = sort_all_probes(all_probes)
     (probes_r, probes_sh, probes_expl) = list(zip(*all_probes))
 

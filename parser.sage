@@ -52,7 +52,7 @@ def MyParser(d, names_r, glitch=False):
         s = set()
         s.add((probe_r, probe_sh))
 
-        t.value = [s, t.value, set()]
+        t.value = [s, t.value, set(), 0]
         return t
 
     def t_RANDOM(t):
@@ -72,7 +72,7 @@ def MyParser(d, names_r, glitch=False):
         s = set()
         s.add((probe_r, probe_sh))
 
-        t.value = [s, t.value, set()]
+        t.value = [s, t.value, set(), 0]
         return t
 
     # Error handling rule
@@ -93,7 +93,7 @@ def MyParser(d, names_r, glitch=False):
 
     def p_expr_paren(t):
         'expr : LPAREN expr RPAREN'
-        t[0] = [t[2][0], '(' + t[2][1] + ')', t[2][2]]
+        t[0] = [t[2][0], '(' + t[2][1] + ')', t[2][2], t[2][3]]
 
     def p_expr_xor(t):
         'expr : expr SPACE expr'
@@ -128,7 +128,8 @@ def MyParser(d, names_r, glitch=False):
             s.add((probe_r, probe_sh))
 
         new_probes = t[1][2].union(t[3][2]).union(probes)
-        t[0] = [s, probe_expl, new_probes]
+        nb_xor = t[1][3] + t[3][3] + 1
+        t[0] = [s, probe_expl, new_probes, nb_xor]
 
     def p_expr_ff(t):
         '''expr : expr SPACE FF
@@ -144,7 +145,7 @@ def MyParser(d, names_r, glitch=False):
             probe_expl = t[1][1] + '|'
         else:
             probe_expl = t[1][1] + ' |'
-        t[0] = [s, probe_expl, t[1][2]]
+        t[0] = [s, probe_expl, t[1][2], t[1][3]]
 
     
     def p_error(p):
