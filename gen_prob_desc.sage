@@ -303,10 +303,17 @@ if __name__ == "__main__":
     probes_r = matrix(probes_r).transpose()
     nb_sh = len(probes_sh[0].rows()[0])
     nb_r = len(probes_r.columns()[0])
+
+    nb_internal = len(probes_sh) - nb_external
+
     vect = False
     nb_internal = len(probes_sh) - nb_external
     if nb_sh <= 16 and nb_r <= 64:
         vect = True
+
+    ans = input("Enforce non-vectorised implementation? (y/n)")
+    if 'y' in ans or 'Y' in ans:
+        vect = False
 
     # Write output probes description content
     with open("prob_desc.c", "w") as f:
