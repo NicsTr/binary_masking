@@ -89,8 +89,8 @@ int next_support(struct comb_t *comb_struct, struct comb_diff_t *comb_diff,
 
     // Adjust the number of internal probes
     if (check_sni) {
-        if (comb_diff->to_del < NB_INT) nb_internal--;
-        if (comb_diff->to_add < NB_INT) nb_internal++;
+        if (comb_diff->to_del < NB_INT) (*nb_internal)--;
+        if (comb_diff->to_add < NB_INT) (*nb_internal)++;
     }
 
     *probes_a_curr = _mm256_xor_si256(*probes_a_curr, probes_a_all[comb_diff->to_del][0]);

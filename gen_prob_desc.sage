@@ -265,9 +265,13 @@ if __name__ == "__main__":
                 nb_external += 1
                 all_probes.append((probe_r, probe_sh, probe_expl))
 
-        # Ensure uniqueness of probe expression
         for probe_r, probe_sh, probe_expl in probes:
+            # Ensure uniqueness of probe expression
             if any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
+                continue
+
+            # Ensure that no elementary probes are taken
+            if probe_r == 0 or probe_sh == 0:
                 continue
             all_probes.insert(0, (probe_r, probe_sh, probe_expl))
 
@@ -308,10 +312,8 @@ if __name__ == "__main__":
     nb_sh = len(probes_sh[0].rows()[0])
     nb_r = len(probes_r.columns()[0])
 
-    nb_internal = len(probes_sh) - nb_external
-
     vect = False
-    nb_internal = len(probes_sh) - nb_external
+    nb_internal = len(radices) - nb_sh
     if nb_sh <= 16 and nb_r <= 64:
         vect = True
 
