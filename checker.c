@@ -22,33 +22,54 @@ int check_support(const struct comb_t comb_struct, const int nb_internal, __m256
     int *corres = malloc(comb_struct.k*sizeof(int));
 
     int nb_nontrivials = 0;
-    uint64_t c = 0;
+    uint64_t c = 1;
     uint64_t i;
     int to_incr, to_incr_bin, p;
     int attack = 0;
+    int mod = 1;
+    int *mods;
 
     for (i = 0; i < comb_struct.k; i++) {
         if (radices[comb_struct.combination[i]] > 1) {
             //printf("nb: %d\n", nb_nontrivials);
             counters[nb_nontrivials] = 1;
-            local_radices[nb_nontrivials] = radices[comb_struct.combination[i]];
+            // There are $2^{radix}$ possible linear combination
+            local_radices[nb_nontrivials] = 1 << radices[comb_struct.combination[i]];
             corres[nb_nontrivials] = i;
             nb_nontrivials++;
         }
     }
 
+    mods = calloc(nb_nontrivials, sizeof(int));
 
-    while ((to_incr = next_increment(&c, local_radices, nb_nontrivials)) != -1) {
+    for (int k = 0; k < nb_nontrivials; k++) {
+        mod *= local_radices[k];
+        mods[k] = mod;
+    }
 
-        // Increment lower-level gray code
-        to_incr_bin = next_increment_bin(&(counters[to_incr]), local_radices[to_incr]);
+
+    // Check_initial expression
+    if (check_sni) {
+        attack |= check_attack_sni(comb_struct.k, nb_internal, probes_r_curr, probes_a_curr, probes_b_curr);
+    } else {
+        attack |= check_attack_ni(comb_struct.k, probes_r_curr, probes_a_curr, probes_b_curr);
+    }
+
+    // Which probe to increment
+    while ((to_incr = next_increment(&c, mods, nb_nontrivials)) != -1) {
+
+        // Increment lower-level gray code : which expression to increment
+        to_incr_bin = next_increment_bin(&(counters[to_incr]),
+                radices[comb_struct.combination[corres[to_incr]]]);
         p = comb_struct.combination[corres[to_incr]];
         probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[p][to_incr_bin]);
         probes_b_curr = _mm256_xor_si256(probes_b_curr, probes_b_all[p][to_incr_bin]);
         probes_r_curr ^= probes_r_all[p][to_incr_bin];
 
         if (counters[to_incr] == 0) {
-            to_incr_bin = next_increment_bin(&(counters[to_incr]), local_radices[to_incr]);
+            // Avoid testing empty linear combination
+            to_incr_bin = next_increment_bin(&(counters[to_incr]),
+                radices[comb_struct.combination[corres[to_incr]]]);
             p = comb_struct.combination[corres[to_incr]];
             probes_a_curr = _mm256_xor_si256(probes_a_curr, probes_a_all[p][to_incr_bin]);
             probes_b_curr = _mm256_xor_si256(probes_b_curr, probes_b_all[p][to_incr_bin]);
@@ -67,6 +88,7 @@ int check_support(const struct comb_t comb_struct, const int nb_internal, __m256
     free(counters);
     free(local_radices);
     free(corres);
+    free(mods);
 
     return attack;
 #endif

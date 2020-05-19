@@ -2,16 +2,14 @@
 #include <stdint.h>
 #include <immintrin.h>
 
-int next_increment(uint64_t *c, int *radices, int n)
+int next_increment(uint64_t *c, int *mods, int n)
 {
     int k = 0;
-    int mod = 1;
 
     (*c)++;
 
     for (k = 0; k < n; k++) {
-        mod *= radices[k];
-        if (*c % mod)
+        if (*c % mods[k])
             break;
     }
 
