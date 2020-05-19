@@ -159,10 +159,49 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
     return 1;
 }
 
-#else
+#else /* Non-vectorised */
+
+
+//        if (check_sni) {
+//            attack_sni = check_attack_sni(comb_struct.k, nb_internal, probes_r_curr, probes_a_curr, probes_b_curr);
+//        } else {
+//            attack_ni = check_attack_ni(comb_struct.k, probes_r_curr, probes_a_curr, probes_b_curr);
+//        }
+
+
+//int next_support(struct comb_t *comb_struct, struct comb_diff_t *comb_diff,
+//        __m256i *probes_a_curr, __m256i *probes_b_curr, uint64_t *probes_r_curr,
+//        __m256i *probes_a_all[NB_PR],  __m256i *probes_b_all[NB_PR], uint64_t *probes_r_all[NB_PR],
+//        uint64_t *nb_internal, int check_sni)
+//{
+//        next_combination(comb_struct, comb_diff);
+//        if (comb_struct->done) return -1;
+//
+//        // Adjust the number of internal probes
+//        if (check_sni) {
+//            if (comb_diff->to_del < NB_INT) *nb_internal--;
+//            if (comb_diff->to_add < NB_INT) *nb_internal++;
+//        }
+//
+//    probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_del]);
+//    probes_sh_xor(probes_a_curr, probes_sh_a[comb_diff.to_add]);
+//
+//    probes_sh_xor(probes_b_curr, probes_sh_b[comb_diff.to_del]);
+//    probes_sh_xor(probes_b_curr, probes_sh_b[comb_diff.to_add]);
+//
+//    probes_r_xor(probes_r_curr, probes_r[comb_diff.to_del]);
+//    probes_r_xor(probes_r_curr, probes_r[comb_diff.to_add]);
+//
+//    }
+
 
 int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
 {
+
+#ifdef GLITCH
+    fprintf(stderr, "\n/!\\ Non-vectorised verification of glitched gadgets is not implemented yet! /!\\\n");
+    exit(-1);
+#endif /* GLITCH */
     uint64_t nb_internal;
     struct comb_diff_t comb_diff;
     uint64_t probes_r_curr[SIZE_R];
@@ -206,6 +245,17 @@ int check_partial(struct comb_t comb_struct, uint64_t nb, int check_sni)
 
         probes_r_xor(probes_r_curr, probes_r[comb_diff.to_del]);
         probes_r_xor(probes_r_curr, probes_r[comb_diff.to_add]);
+
+
+
+       // attack = check_support(comb_struct, nb_internal, probes_a_curr,
+       //         probes_b_curr, probes_r_curr, probes_a_all, probes_b_all,
+       //         probes_r_all, check_sni);
+       // if (next_support(&comb_struct, &comb_diff, &probes_a_curr, &probes_b_curr,
+       //             &probes_r_curr, probes_a_all, probes_b_all, probes_r_all,
+       //             &nb_internal, check_sni)) {
+       //     break;
+       // }
     }
 
     if (attack_ni || attack_sni) {
