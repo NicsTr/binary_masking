@@ -23,7 +23,7 @@ at [Eprint 2016/286](https://eprint.iacr.org/2016/486.pdf)) can be found in
 
 A _d_-NI scheme can be generated for any _d_ using `gen_sch.py`.
 
-## Probe description generation
+## Probes description generation
 
 Before compiling the verification tool, it is required to generate the
 C description of the scheme that will be verified. To do so you can use
@@ -47,10 +47,16 @@ being based on Python, it needs to run on Python3. Since version 9.0,
 
 ## Compilation and architectural dependencies
 
-We provide a simple `Makefile` that should satisfy most needs.
-Our implementation currently requires at least `AVX2` instructions and
-can benefit from `AVX512` extensions. The `Makefile` can be
-tweaked in order to reflect your particular architecture. By default, the
+Our implementation benefit from `AVX2` and `AVX512` instructions, but the main
+feature (scheme verification in the probing model) can be used without
+vectorised instructions. Only the verification of schemes in presence of
+hardware glitches is not yet supported without at least `AVX2`.
+
+One can enforce the use of only non-vectorised instructions when generating the
+probes description.
+
+We provide a simple `Makefile` that should satisfy most needs. It can be
+tweaked in order to reflect the extensions you want to use. By default, the
 verification tool is compiled for both `AVX2` and `AVX512`.
 
 ## Verification of a scheme
