@@ -219,7 +219,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         filename = sys.argv[1]
     else:
-        filename = raw_input("Filename: ")
+        filename = input("Filename: ")
 
     with open(filename, "r") as f:
         txt_desc = f.read().split('\n')
