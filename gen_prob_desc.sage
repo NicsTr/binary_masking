@@ -367,22 +367,29 @@ if __name__ == "__main__":
 
         f.write("/* Probe description for {} */".format(filename))
         f.write("\n\n")
-        f.write("char *filename;")
+        f.write("extern char *filename;")
         f.write("\n")
         if vect:
+            f.write("extern ")
             f.write(probes_r_to_c_vect(probes_r)[0] + ';')
             f.write("\n")
+            f.write("extern ")
             f.write(probes_sh_to_c_vect(probes_sh, probes_expl)[0] + ';')
             f.write("\n")
+            f.write("extern ")
             f.write(probes_sh_to_c_vect(probes_sh, probes_expl)[2] + ';')
         else:
+            f.write("extern ")
             f.write(probes_r_to_c(probes_r)[0] + ';')
             f.write("\n")
+            f.write("extern ")
             f.write(probes_sh_to_c(probes_sh, probes_expl)[0] + ';')
             f.write("\n")
+            f.write("extern ")
             f.write(probes_sh_to_c(probes_sh, probes_expl)[2] + ';')
 
         f.write("\n")
+        f.write("extern ")
         f.write(radices_to_c(radices)[0] + ';')
 
         f.write("\n\n")
