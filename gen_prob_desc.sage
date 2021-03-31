@@ -254,6 +254,8 @@ if __name__ == "__main__":
         l = l.strip()
         if not l:
             continue
+        if l[-1] == '|':
+            l = l[:-1].strip()
         res = parser.parse(l)
         probes = res[2]
         tot_nb_xor += res[3]
@@ -265,13 +267,18 @@ if __name__ == "__main__":
                 nb_external += 1
                 all_probes.append((probe_r, probe_sh, probe_expl))
 
+
         for probe_r, probe_sh, probe_expl in probes:
+            if (probe_r, probe_sh, probe_expl) in all_probes:
+                continue
             # Ensure uniqueness of probe expression
-            if any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
+            if not glitch and  any(probe_r == p[0] and probe_sh == p[1] for p in all_probes):
                 continue
 
+
             # Ensure that no elementary probes are taken
-            if probe_r == 0 or probe_sh == 0:
+            #if probe_r == 0 or probe_sh == 0:
+            if re.match(r"^(r[0-9a-zA-Z]+|s[0-9a-zA-Z]{2})$", probe_expl):
                 continue
             all_probes.insert(0, (probe_r, probe_sh, probe_expl))
 
