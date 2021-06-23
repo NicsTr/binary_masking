@@ -18,6 +18,35 @@ def is_share_better(x1_s, x2_s):
     return apply_mask(x1_s, x2_s) == x1_s
 
 
+def number_missing_share(x1_s, x2_s):
+    res = 0
+    for i1, i2 in zip(x1_s, x2_s):
+        if i1 and not i2:
+            res += 1
+    return res
+
+
+def xor(x1_r, x2_r):
+    return [i1^^i2 for i1,i2 in zip(x1_r, x2_r)]
+
+
+def hamming_weight(x):
+    res = 0
+    for i in x:
+        if i:
+            res += 1
+    return res
+
+def share_completion(res, x1_s, x_r_str, i, j, n_r=0):
+    for x2_s in res[j][x_r_str]:
+        n_s = number_missing_share(x1_s, x2_s)
+        # using n elementary probes
+        if n_r + n_s + j <= i:
+            return True
+
+    return False
+
+
 def check(M, Mb, mask_r, mask_s, d):
     """
     For given matrices `M` and `Mb` containing the probe description before
@@ -65,17 +94,30 @@ def check(M, Mb, mask_r, mask_s, d):
 
             found = False
             for j in range(i, -1, -1):
-                if x1_r_str not in res[j]:
-                    continue
-                for x2_s in res[j][x1_r_str]:
-                    if is_share_better(x1_s, x2_s):
-                        found = True
+                if x1_r_str in res[j]:
+                    # Check for already correct randomness
+                    found = share_completion(res, x1_s, x1_r_str, i, j)
+                    if found:
                         break
+
+                # Tries to fix randomness with elementary probes
+                for x2_r_str in res[j]:
+                    x2_r = [int(v) for v in x2_r_str]
+                    xf_r = xor(x2_r, x1_r)
+                    n_r = hamming_weight(xf_r)
+                    # number of elementary random probes already too high
+                    if n_r + j > i:
+                        continue
+                    # x2_r corrected with xf_r
+                    found = share_completion(res, x1_s, x2_r_str, i, j, n_r)
+                    if found:
+                        break
+
                 if found:
                     break
 
             if not found:
-                print("Contradiction found!")
+                print("Cannot remove the probes")
                 return False
     return True
 
@@ -110,7 +152,7 @@ def gen_matrices_and_masks(filename):
             # Filtering out probes
             for i in range(len(line)):
                 s1 = ' '.join(line[:i+1])
-                # HERE IS the criterion to filter out probes
+                # HERE IS the criterion to filter out probes (see Section 5)
                 if not s1.count('s') % 2 and i+1 < len(line) and 's' in line[i + 1]:
                     to_del.append(i)
                     probes_todel.append(s1)
