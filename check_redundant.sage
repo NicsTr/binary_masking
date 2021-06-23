@@ -30,7 +30,7 @@ def check(M, Mb, mask_r, mask_s, d):
     """
 
     res = []
-    for i in range(d):
+    for i in range(d+1):
         res.append(dict())
         size2 = Mb.nrows()
         for j in itertools.combinations(range(size2), i):
@@ -49,8 +49,7 @@ def check(M, Mb, mask_r, mask_s, d):
                 res[i][x2_r_str] = []
             res[i][x2_r_str].append(x2_s)
 
-    for i in range(d):
-        res1 = dict()
+    for i in range(d+1):
         size1 = M.nrows()
         for j in itertools.combinations(range(size1), i):
             v1 = [0]*size1

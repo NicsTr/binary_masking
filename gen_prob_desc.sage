@@ -292,8 +292,8 @@ if __name__ == "__main__":
         load_attach_path(base_dir)
         load(base_dir + "check_redundant.sage")
 
-        print("Section 5.5 describes a way to filter out some probes.")
-        ans = input("Do you want to check if the filter of Section 5.5 is"
+        print("Section 5 describes a specific way to filter out probes.")
+        ans = input("Do you want to check if this specific filter is"
                 " correct for your scheme? (y/n)")
         if 'y' in ans or 'Y' in ans:
             check_file(filename)
