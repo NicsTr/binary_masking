@@ -8,14 +8,14 @@ OBJS =  \
  popcount256_16.o \
  checker_helper.o \
  checker.o \
- binverif.o \
+ matverif.o \
  gray.o \
  prob_desc.o
 
-binverif: $(OBJS)
+matverif: $(OBJS)
 	$(CC) -lpthread -o $@ $(OBJS)
 
-binverif.o: binverif.c checker_helper.o prob_desc.o checker.o combinations.o gray.o
+matverif.o: matverif.c checker_helper.o prob_desc.o checker.o combinations.o gray.o
 	$(CC) $(FLAGS) -o $@ -c $<
 
 %.o: %.c %.h prob_desc.h
@@ -24,7 +24,7 @@ binverif.o: binverif.c checker_helper.o prob_desc.o checker.o combinations.o gra
 .PHONY: clean all
 
 clean:
-	rm -f $(OBJS) binverif *.sage.py parser.out parsetab.py
+	rm -f $(OBJS) matverif *.sage.py parser.out parsetab.py
 
-all: binverif
+all: matverif
 
