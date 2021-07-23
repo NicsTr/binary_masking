@@ -61,7 +61,7 @@ verification tool is compiled for both `AVX2` and `AVX512`.
 
 ## Verification of a scheme
 
-The generated binary `binverif` can be used for both sequential and parallel
+The generated binary `matverif` can be used for both sequential and parallel
 verification. By default, it sequentially verifies whether the scheme given as
 input in `prob_desc.c` is NI or not. To enable SNI checks, you must use the
 option `--sni`. To use parallel verification, you must use the option `-p`
